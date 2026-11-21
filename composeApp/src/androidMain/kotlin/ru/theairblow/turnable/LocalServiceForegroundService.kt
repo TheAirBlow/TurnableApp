@@ -48,10 +48,7 @@ class LocalServiceForegroundService : Service() {
 
     private fun buildNotification(status: ClientStatus) = NotificationCompat.Builder(this, AndroidNotifier.STATUS_CHANNEL)
         .setSmallIcon(R.drawable.ic_turnable_notification)
-        .setContentTitle(
-            if (status.connected > 0) getString(R.string.notification_status_connected)
-            else getString(R.string.notification_status_app_name),
-        )
+        .setContentTitle(getString(R.string.notification_status_app_name))
         .setContentText(
             when {
                 status.total == 0 -> getString(R.string.notification_status_running)

@@ -10,6 +10,8 @@ import java.awt.geom.Ellipse2D
 import java.awt.geom.Path2D
 import java.awt.geom.RoundRectangle2D
 import java.awt.image.BufferedImage
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
@@ -29,6 +31,8 @@ class DesktopNotifier : PlatformNotifier {
     @Volatile var onCaptchaClick: (instanceId: String) -> Unit = {}
 
     @Volatile private var lastCaptcha: String? = null
+    /** notify-send notification IDs by instance, so each prompt can be closed when it ends. */
+    private val sentNotifications = ConcurrentHashMap<String, Int>()
     private val tray: TrayIcon? = createTray()
 
     private fun createTray(): TrayIcon? {
@@ -53,8 +57,9 @@ class DesktopNotifier : PlatformNotifier {
         val message = text(Res.string.desktop_captcha_message, request.name)
         if (tray != null) {
             tray.displayMessage(title, text(Res.string.desktop_captcha_balloon, message), TrayIcon.MessageType.WARNING)
-        } else runCatching {
-            ProcessBuilder("notify-send", "-u", "critical", "-a", TITLE, title, message).start()
+        } else {
+            closeSentNotification(request.instanceId)
+            sendLinuxNotification(title, message)?.let { sentNotifications[request.instanceId] = it }
         }
     }
 
@@ -68,10 +73,36 @@ class DesktopNotifier : PlatformNotifier {
 
     override fun captchaCleared(instanceId: String) {
         if (lastCaptcha == instanceId) lastCaptcha = null
+        closeSentNotification(instanceId)
     }
 
     fun dispose() {
+        sentNotifications.keys.toList().forEach(::closeSentNotification)
         tray?.let { SystemTray.getSystemTray().remove(it) }
+    }
+
+    /** Posts a notification through notify-send, returning its ID so it can be closed when the request ends. */
+    private fun sendLinuxNotification(title: String, message: String): Int? = runCatching {
+        val process = ProcessBuilder("notify-send", "-u", "critical", "-p", "-a", TITLE, title, message).start()
+        process.outputStream.close()
+        if (!process.waitFor(2, TimeUnit.SECONDS)) {
+            process.destroyForcibly()
+            return@runCatching null
+        }
+        process.inputStream.bufferedReader().use { it.readLine() }?.trim()?.toIntOrNull()
+    }.getOrNull()
+
+    private fun closeSentNotification(instanceId: String) {
+        val id = sentNotifications.remove(instanceId) ?: return
+        runCatching {
+            ProcessBuilder(
+                "gdbus", "call", "--session",
+                "--dest", "org.freedesktop.Notifications",
+                "--object-path", "/org/freedesktop/Notifications",
+                "--method", "org.freedesktop.Notifications.CloseNotification",
+                id.toString(),
+            ).start()
+        }
     }
 
     private fun icon(): BufferedImage = BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB).also { image ->

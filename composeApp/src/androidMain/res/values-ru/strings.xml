@@ -18,14 +18,13 @@
     <string name="notification_action_later">Позже</string>
 
     <string name="notification_status_app_name">Turnable</string>
-    <string name="notification_status_connected">Подключено</string>
     <string name="notification_status_running">Сервис работает, клиентов пока нет</string>
     <string name="notification_action_disconnect_all">Отключить все</string>
 
     <plurals name="notification_status_count">
-        <item quantity="one">Подключено: %1$d из %2$d клиента</item>
-        <item quantity="few">Подключено: %1$d из %2$d клиентов</item>
-        <item quantity="many">Подключено: %1$d из %2$d клиентов</item>
-        <item quantity="other">Подключено: %1$d из %2$d клиента</item>
+        <item quantity="one">В сети %1$d из %2$d клиента</item>
+        <item quantity="few">В сети %1$d из %2$d клиентов</item>
+        <item quantity="many">В сети %1$d из %2$d клиентов</item>
+        <item quantity="other">В сети %1$d из %2$d клиента</item>
     </plurals>
 </resources>

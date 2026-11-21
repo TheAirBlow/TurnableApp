@@ -18,12 +18,11 @@
     <string name="notification_action_later">Later</string>
 
     <string name="notification_status_app_name">Turnable</string>
-    <string name="notification_status_connected">Connected</string>
     <string name="notification_status_running">Service running, no clients yet</string>
     <string name="notification_action_disconnect_all">Disconnect all</string>
 
     <plurals name="notification_status_count">
-        <item quantity="one">%1$d of %2$d client connected</item>
-        <item quantity="other">%1$d of %2$d clients connected</item>
+        <item quantity="one">%1$d of %2$d client online</item>
+        <item quantity="other">%1$d of %2$d clients online</item>
     </plurals>
 </resources>

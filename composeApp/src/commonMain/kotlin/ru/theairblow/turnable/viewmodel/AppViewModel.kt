@@ -414,12 +414,14 @@ class AppViewModel(
         if (restoreArmed) rememberRunning(clients)
         notifier.status(clients.count { it.status == InstanceStatus.INSTANCE_STATUS_STARTED }, clients.size)
         val ids = list.associateBy { it.id }
-        // A client that came up or vanished no longer needs its captcha
+        // Only a client still starting can be waiting for a captcha; any other state ends the request
         val now = nowUnixSeconds()
         _captchas.value.filter { c ->
-            val status = ids[c.instanceId]?.status
-            status == InstanceStatus.INSTANCE_STATUS_STARTED ||
-                (status == null && now - (c.deadlineSec - MANUAL_CAPTCHA_WINDOW_SEC) > 10)
+            when (ids[c.instanceId]?.status) {
+                null -> now - (c.deadlineSec - MANUAL_CAPTCHA_WINDOW_SEC) > 10
+                InstanceStatus.INSTANCE_STATUS_STARTING -> false
+                else -> true
+            }
         }.forEach { clearCaptcha(it.instanceId) }
     }
 
