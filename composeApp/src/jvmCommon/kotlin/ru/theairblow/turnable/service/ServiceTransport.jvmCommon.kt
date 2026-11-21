@@ -1,4 +1,7 @@
 @file:OptIn(ExperimentalSerializationApi::class)
+// BouncyCastle deprecates the low-level ML-KEM API in 1.85.2 and removes it in 1.86;
+// seed-based key generation has no public replacement
+@file:Suppress("DEPRECATION")
 
 package ru.theairblow.turnable.service
 
@@ -103,9 +106,7 @@ actual fun openServiceConnection(endpoint: ServiceEndpoint, keys: ClientKeys?, s
 /** Rebuilds the decapsulation key from the 64-byte seed (d || z) Go's `NewDecapsulationKey768` takes. */
 private fun privateKeyFromSeed(seed: ByteArray): MLKEMPrivateKeyParameters {
     require(seed.size == 64) { "Client private key must be a 64-byte seed" }
-    val gen = MLKEMKeyPairGenerator()
-    gen.init(MLKEMKeyGenerationParameters(SecureRandom(), MLKEMParameters.ml_kem_768))
-    return gen.internalGenerateKeyPair(seed.copyOfRange(0, 32), seed.copyOfRange(32, 64)).private as MLKEMPrivateKeyParameters
+    return MLKEMPrivateKeyParameters(MLKEMParameters.ml_kem_768, seed)
 }
 
 actual fun generateServiceKeyPair(): Pair<ByteArray, ByteArray> {
