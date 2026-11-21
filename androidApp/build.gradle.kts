@@ -45,6 +45,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    lint {
+        // Newer targets block exec() of the downloaded core, so the pin is intentional
+        disable += "ExpiredTargetSdkVersion"
+    }
 }
 
 dependencies {
