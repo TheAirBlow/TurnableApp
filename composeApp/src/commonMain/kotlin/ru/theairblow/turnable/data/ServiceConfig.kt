@@ -50,7 +50,11 @@ data class AppPreferencesData(
     val advancedMode: Boolean = false,
     /** Checks for new core releases from time to time and asks before installing one. */
     val autoUpdate: Boolean = true,
+    /** Looks for newer app releases from time to time. */
+    val autoUpdateApp: Boolean = true,
     val lastUpdateCheckSec: Long = 0,
-    /** Release the user said no to, so it isn't offered again. */
+    /** Core release the user said no to, so it isn't offered again. */
     val dismissedUpdate: String = "",
+    /** App release the user said no to; the Clients banner stays hidden for it. */
+    val dismissedAppUpdate: String = "",
 )

@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -68,9 +69,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -245,7 +248,10 @@ fun SectionCard(
     Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.padding(contentPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (title != null) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     if (icon != null) Icon(icon, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
                     Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                     action()
@@ -344,6 +350,7 @@ fun InfoRow(label: String, value: String, mono: Boolean = false, copyable: Boole
         Text(
             value, style = MaterialTheme.typography.bodyMedium, fontFamily = if (mono) MonoFamily else null,
             modifier = Modifier.weight(0.62f), maxLines = 2, overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.End,
         )
         if (copyable) IconButton(onClick = { copy(value, label) }, Modifier.size(32.dp)) {
             Icon(
@@ -457,14 +464,20 @@ fun <T> DropdownField(
     }
 }
 
+/** A switch with title and hint; the whole row toggles it. */
 @Composable
 fun SwitchRow(title: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit, subtitle: String? = null) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+    Row(
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium)
+            .toggleable(checked, role = Role.Switch, onValueChange = onCheckedChange)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f).padding(end = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, style = MaterialTheme.typography.bodyLarge)
             if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 

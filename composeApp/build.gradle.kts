@@ -1,3 +1,9 @@
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -8,6 +14,34 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
+}
+
+/** Writes the version the build was packaged as, since [APP_VERSION] feeds update checks. */
+abstract class GenerateAppVersionTask : DefaultTask() {
+    @get:Input abstract val version: Property<String>
+    @get:OutputDirectory abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val file = outputDir.get().file("ru/theairblow/turnable/service/AppVersion.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+            package ru.theairblow.turnable.service
+
+            /** The version this build was packaged as. */
+            const val APP_VERSION = "${version.get()}"
+            """.trimIndent() + "\n",
+        )
+    }
+}
+
+// The version the CI passes for tagged builds; AppUpdate compares it against release tags
+val appVersion = providers.gradleProperty("appVersion").getOrElse("1.0")
+
+val generateAppVersion = tasks.register<GenerateAppVersionTask>("generateAppVersion") {
+    version.set(appVersion)
+    outputDir.set(layout.buildDirectory.dir("generated/appVersion/commonMain/kotlin"))
 }
 
 kotlin {
@@ -43,6 +77,8 @@ kotlin {
     }
 
     sourceSets {
+        commonMain.get().kotlin.srcDir(generateAppVersion)
+
         // Code shared by the two JVM-based targets (sockets, crypto, process management)
         val jvmCommon by creating {
             dependsOn(commonMain.get())

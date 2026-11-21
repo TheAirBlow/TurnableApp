@@ -1,8 +1,5 @@
 package ru.theairblow.turnable.service
 
-/** Keep in sync with versionName in androidApp/build.gradle.kts. */
-const val APP_VERSION = "1.0"
-
 /** Sent with every HTTP request; panels such as Frostbite recognize the "Turnable-Android" prefix and serve turnable:// links. */
 const val USER_AGENT = "Turnable-Android/$APP_VERSION"
 

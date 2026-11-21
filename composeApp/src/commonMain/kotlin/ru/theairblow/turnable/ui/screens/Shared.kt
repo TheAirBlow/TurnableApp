@@ -16,7 +16,11 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,6 +30,7 @@ import ru.theairblow.turnable.data.DEFAULT_SERVICE_ID
 import ru.theairblow.turnable.data.ServiceConfig
 import ru.theairblow.turnable.data.ServiceType
 import ru.theairblow.turnable.proto.InstanceInfo
+import ru.theairblow.turnable.service.DEFAULT_CORE_VERSION
 import ru.theairblow.turnable.proto.InstanceStatus
 import ru.theairblow.turnable.ui.components.EmptyState
 import ru.theairblow.turnable.ui.components.StatusKind
@@ -67,6 +72,15 @@ fun ServiceConfig.displaySubtitle(): String = when (type) {
         else version.ifBlank { stringResource(Res.string.service_subtitle_latest) },
     )
     ServiceType.REMOTE -> "$host:$port"
+}
+
+/** Version the local service [svc] runs; a blank pin follows the newest installed release, which only the host can resolve. */
+@Composable
+fun rememberCoreVersion(vm: AppViewModel, svc: ServiceConfig): String {
+    val download by vm.coreDownload.collectAsStateWithLifecycle()
+    var version by remember(svc.id, svc.version) { mutableStateOf(svc.version.ifBlank { DEFAULT_CORE_VERSION }) }
+    LaunchedEffect(svc.id, svc.version, download == null) { version = vm.localCoreVersion(svc.id) ?: svc.version }
+    return version
 }
 
 /**
@@ -111,7 +125,7 @@ fun ConnectionGate(vm: AppViewModel, openServices: () -> Unit, content: @Composa
             if (download != null) stringResource(Res.string.gate_downloading_once) else null,
         ) {
             val d = download
-            if (d != null) DownloadBar(d, Modifier.widthIn(max = 320.dp)) else CircularProgressIndicator(Modifier.size(28.dp))
+            if (d != null) DownloadBar(d, stringResource(Res.string.download_version, d.version), Modifier.widthIn(max = 320.dp)) else CircularProgressIndicator(Modifier.size(28.dp))
         }
         else EmptyState(
             Icons.Default.Hub,

@@ -54,10 +54,10 @@
     <string name="status_process_stopped">Process stopped</string>
 
     <!-- Connection gate -->
-    <string name="gate_connecting_to">Connecting: %1$s…</string>
+    <string name="gate_connecting_to">Connecting to %1$s…</string>
     <string name="gate_connecting">Connecting…</string>
     <string name="gate_attempt">Attempt %1$d</string>
-    <string name="gate_cannot_reach">Cannot reach: %1$s</string>
+    <string name="gate_cannot_reach">Cannot reach %1$s</string>
     <string name="gate_service_not_running">Turnable service is not running</string>
     <string name="gate_retrying_in"> · retrying in %1$ds</string>
     <string name="gate_services">Services</string>
@@ -105,9 +105,6 @@
     <string name="clients_usage_expires_in"> · expires in %1$s</string>
     <string name="clients_account_page">Account page</string>
     <string name="clients_support">Support</string>
-    <string name="clients_update_available">Turnable %1$s is available</string>
-    <string name="clients_update_body">Installing it restarts %1$s and drops its connections for a moment.</string>
-    <string name="clients_update_app_outdated">App update %1$s is available. Update the app first; the new core may need it.</string>
 
     <plurals name="clients_added">
         <item quantity="one">Added %1$d client</item>
@@ -178,13 +175,13 @@
     <string name="client_new_title">New client</string>
     <string name="client_start_count">Start %1$d</string>
     <string name="client_raw_label">turnable:// link or JSON</string>
-    <string name="client_raw_hint">One config per line; several lines start several clients</string>
+    <string name="client_raw_hint">One config per line, several lines start several clients</string>
     <string name="client_bulk_detected">%1$d configs detected. Each client gets its own random local port and the name from its link.</string>
     <string name="client_bulk_autostart_hint">Restore these clients when the service restarts</string>
     <string name="client_name_hint">Defaults to the name in the config</string>
     <string name="client_listen_address">Local listen address</string>
     <string name="client_listen_suggested">The link suggests its own ports, which are used unless you change this</string>
-    <string name="client_listen_hint">First route listens here; further routes use the next ports</string>
+    <string name="client_listen_hint">First route listens here, further routes use the next ports</string>
     <string name="client_new_random_port">New random port</string>
     <string name="client_connection_type">Connection type</string>
     <string name="client_type_direct_hint">Straight to the destination, not recommended</string>
@@ -346,7 +343,7 @@
     <string name="stats_sessions">Sessions</string>
     <string name="stats_sessions_value">%1$d · %2$d ch</string>
     <string name="stats_uptime">Uptime</string>
-    <string name="stats_counted_hint">Counted on the server side: up is what clients sent into the tunnel.</string>
+    <string name="stats_counted_hint">Counted on the server side, up is what clients sent into the tunnel.</string>
     <string name="stats_users_n">Users (%1$d)</string>
     <string name="stats_no_users">No user has connected since the server started.</string>
     <string name="stats_last_seen">Last seen %1$s</string>
@@ -360,7 +357,7 @@
     <string name="stats_kick_session_body">Closes the tunnels of this session. The client will usually reconnect.</string>
     <string name="stats_kick_failed">Kick failed</string>
     <string name="stats_collect_title">Collect usage?</string>
-    <string name="stats_collect_body">Returns what each user moved since the previous collect and starts counting again. Panels use this for billing; collecting here means a panel will not see this traffic.</string>
+    <string name="stats_collect_body">Returns what each user moved since the previous collect and starts counting again. Panels use this for billing, so collecting here means a panel will not see this traffic.</string>
     <string name="stats_collect_failed">Collect failed</string>
     <string name="stats_usage_since">Usage since last collect</string>
     <string name="stats_usage_label">↑ %1$s  ↓ %2$s</string>
@@ -391,7 +388,6 @@
     <string name="service_details">Details</string>
     <string name="service_version">Version</string>
     <string name="service_custom_core">Custom core</string>
-    <string name="service_newest_installed">Newest installed</string>
     <string name="service_captcha">Captcha</string>
     <string name="service_captcha_always_manual">Always manual</string>
     <string name="service_captcha_automatic">Automatic, manual when it fails</string>
@@ -410,7 +406,7 @@
     <string name="service_live_logs">Live logs</string>
     <string name="service_remove_title">Remove %1$s?</string>
     <string name="service_remove_local_body">The local service process will be stopped. Its saved instances stay on this device and come back if you add it again with the same ID.</string>
-    <string name="service_remove_remote_body">The service itself is not affected; only this saved connection is removed.</string>
+    <string name="service_remove_remote_body">The service itself is not affected, only this saved connection is removed.</string>
     <string name="service_process_output">Process output</string>
     <string name="service_add_title">Add service</string>
     <string name="service_edit_title">Edit service</string>
@@ -471,11 +467,9 @@
     <string name="settings_captcha_hint">Turnable tries to solve the platform captcha on its own. When that fails it notifies you, and you solve it in a page that is filled in for you.</string>
     <string name="settings_force_manual">Always solve captchas manually</string>
     <string name="settings_force_manual_hint">Skips the automatic attempt. Restarts the service when changed</string>
-    <string name="settings_advanced">Advanced</string>
+    <string name="settings_general">General</string>
     <string name="settings_advanced_mode">Advanced mode</string>
     <string name="settings_advanced_mode_hint">Adds tabs to manage services, servers and providers. Leave it off to just use Turnable as a client</string>
-    <string name="settings_auto_update_services">Update local services automatically</string>
-    <string name="settings_auto_update_hint">Checks for new releases every few hours and asks before installing one</string>
     <string name="settings_restore_running">Reconnect clients on launch</string>
     <string name="settings_restore_running_hint">Starts the clients that were running when the app was closed</string>
     <string name="settings_auto_connect">Connect on launch</string>
@@ -486,7 +480,6 @@
     <string name="settings_restore_clipboard">Restore from clipboard</string>
     <string name="settings_no_backup">The clipboard does not contain a Turnable backup</string>
     <string name="settings_nothing_new">Nothing new to import</string>
-    <string name="settings_about">About</string>
     <string name="settings_app_description">Tunnels traffic through platform call infrastructure.</string>
     <string name="settings_version">Version</string>
     <string name="settings_service_protocol">Service protocol</string>
@@ -496,16 +489,29 @@
     <string name="settings_core_file">Core file</string>
     <string name="settings_needs_min">Needs %1$s or newer.</string>
     <string name="settings_version_checks_off">Version checks are off.</string>
-    <string name="settings_check_updates">Check for updates</string>
-    <string name="settings_checking">Checking…</string>
     <string name="settings_logs">Logs</string>
-    <string name="settings_update_automatically">Update automatically</string>
-    <string name="settings_up_to_date">Turnable is up to date</string>
-    <string name="settings_update_available">Turnable %1$s is available</string>
-    <string name="settings_app_update_available">App update %1$s is available</string>
-    <string name="settings_app_update_hint">Update the app before the core; a newer core may need the new app.</string>
-    <string name="settings_open_release">Release page</string>
-    <string name="settings_check_failed">Could not check for updates: %1$s</string>
+
+    <!-- Updates -->
+    <string name="update_title">Updates</string>
+    <string name="update_check_now">Check now</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_status_current">Turnable is up to date</string>
+    <string name="update_status_available">Updates available</string>
+    <string name="update_status_failed">Could not check for updates</string>
+    <string name="update_last_checked">Last checked %1$s</string>
+    <string name="update_app_name">App</string>
+    <string name="update_core_name">Service</string>
+    <string name="update_version_change">%1$s → %2$s</string>
+    <string name="update_version_current">%1$s · up to date</string>
+    <string name="update_auto">Check automatically</string>
+    <string name="update_auto_hint">Looks for new app and service releases every few hours and asks before installing anything</string>
+    <string name="update_downloading_installer">Downloading the installer…</string>
+    <string name="update_installing">Installing…</string>
+    <string name="update_app_title">App update available</string>
+    <string name="update_app_body">Version %1$s is ready to install.</string>
+    <string name="update_core_title">Service update available</string>
+    <string name="update_core_body">Version %1$s. The service restarts, so connections drop for a moment.</string>
+    <string name="update_app_first">Update the app first, the new service may need it.</string>
 
     <plurals name="settings_imported">
         <item quantity="one">Imported %1$d service</item>
@@ -553,7 +559,7 @@
     <string name="desktop_captcha_balloon">%1$s. Click to solve it.</string>
     <string name="desktop_update_title">Update available</string>
     <string name="desktop_update_message">Turnable %1$s is available. Open the app to update.</string>
-    <string name="desktop_update_app_outdated">Turnable %1$s is available. Update the app first; the new core may need it.</string>
+    <string name="desktop_update_app_outdated">Turnable %1$s is available. Update the app first, the new core may need it.</string>
 
     <!-- View model messages -->
     <string name="vm_connection_failed">Connection failed</string>
@@ -570,6 +576,13 @@
     <string name="vm_no_release">No Turnable release found</string>
     <string name="vm_custom_core_in_use">A custom core is in use. Clear it to follow releases.</string>
     <string name="vm_default_service_name">This device</string>
+    <string name="vm_service_stopped">The service stopped</string>
+    <string name="vm_app_update_opened">The installer is open. Follow its steps to finish.</string>
+    <string name="vm_app_update_no_installer">No app installer is published for this device</string>
+    <string name="vm_app_update_permission">Allow installing apps for Turnable in the settings that opened, then try again</string>
+    <string name="vm_app_update_download_failed">Could not download the update</string>
+    <string name="vm_app_update_open_failed">Could not open the installer</string>
+    <string name="vm_app_update_failed">Could not install the update: %1$s</string>
 
     <plurals name="vm_links_failed">
         <item quantity="one">%1$d link of %2$s failed to start</item>

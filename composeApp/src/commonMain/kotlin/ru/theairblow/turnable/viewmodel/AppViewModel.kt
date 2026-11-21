@@ -28,18 +28,23 @@ import ru.theairblow.turnable.data.AppPreferencesData
 import ru.theairblow.turnable.data.ServiceConfig
 import ru.theairblow.turnable.data.ServiceType
 import ru.theairblow.turnable.data.ThemeMode
+import ru.theairblow.turnable.proto.InstanceEventType
 import ru.theairblow.turnable.proto.InstanceInfo
 import ru.theairblow.turnable.proto.InstanceStatus
 import ru.theairblow.turnable.proto.InstanceType
 import ru.theairblow.turnable.proto.StartClientRequest
 import ru.theairblow.turnable.proto.LogAttr
+import ru.theairblow.turnable.proto.LogRecord
 import ru.theairblow.turnable.proto.ProviderInfo
 import ru.theairblow.turnable.proto.SessionEvent
+import ru.theairblow.turnable.service.AppInstallException
+import ru.theairblow.turnable.service.AppInstallFailure
+import ru.theairblow.turnable.service.AppInstaller
 import ru.theairblow.turnable.service.AppUpdate
 import ru.theairblow.turnable.service.ClientKeys
 import ru.theairblow.turnable.service.DEFAULT_CORE_VERSION
-import ru.theairblow.turnable.service.fetchAppUpdate
 import ru.theairblow.turnable.service.DownloadProgress
+import ru.theairblow.turnable.service.fetchAppUpdate
 import ru.theairblow.turnable.service.LocalServiceHost
 import ru.theairblow.turnable.service.MIN_CORE_VERSION
 import ru.theairblow.turnable.service.compareVersions
@@ -87,16 +92,21 @@ private const val MAX_LOGS = 2000
 private const val LOG_FLUSH_MS = 150L
 private const val SUBSCRIPTION_CHECK_MS = 60_000L
 private const val DEFAULT_CAPTCHA_PORT = 1984
-private const val UPDATE_FIRST_CHECK_MS = 30_000L
 private const val UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60_000L
-private const val CAPTCHA_PRUNE_MS = 15_000L
-private const val CAPTCHA_LOG_MESSAGE = "manual captcha solve required"
-private const val MANUAL_CAPTCHA_WINDOW_SEC = 600L
+
+/** Log messages the core emits around a manual captcha solve; every state change is one of these. */
+private const val CAPTCHA_REQUIRED_LOG = "manual captcha solve required"
+private const val CAPTCHA_AUTH_DONE_LOG = "vk authorize completed"
+private const val CAPTCHA_AUTH_FAILED_LOG = "vk authorize anonymous flow failed"
+private const val INSTANCE_START_FAILED_LOG = "instance start failed"
+private const val INSTANCE_STOPPED_LOG = "client instance stopped unexpectedly"
+
 private val RECONNECT_DELAYS_SEC = listOf(2, 4, 8, 15, 30)
 
 class AppViewModel(
     private val prefs: AppPreferences,
     private val localHost: LocalServiceHost,
+    private val appInstaller: AppInstaller,
     private val notifier: PlatformNotifier = PlatformNotifier.None,
 ) : ViewModel() {
     val prefsData: StateFlow<AppPreferencesData> =
@@ -149,6 +159,12 @@ class AppViewModel(
     /** A newer app release than this build, when the last check found one. */
     val appUpdate: StateFlow<AppUpdate?> = _appUpdate.asStateFlow()
 
+    /** The app installer download in flight, if any. */
+    val appDownload: StateFlow<DownloadProgress?> = appInstaller.download
+
+    private val _installingApp = MutableStateFlow(false)
+    val installingApp: StateFlow<Boolean> = _installingApp.asStateFlow()
+
     private val _captchaToSolve = MutableStateFlow<String?>(null)
     /** Instance whose captcha screen is open. */
     val captchaToSolve: StateFlow<String?> = _captchaToSolve.asStateFlow()
@@ -172,6 +188,8 @@ class AppViewModel(
         viewModelScope.launch {
             ensureDefaultService()
             val p = prefs.data.first()
+            // Check right away, but don't hold up the connection while the network is busy
+            if (p.autoUpdate || p.autoUpdateApp) viewModelScope.launch { checkForUpdates(ignoreInterval = true) }
             // Simple mode only ever uses the on-device service, so it always comes up with the app
             val target = if (p.advancedMode) p.services.firstOrNull { it.id == p.selectedServiceId }?.takeIf { p.autoConnect }
             else p.services.firstOrNull { it.id == DEFAULT_SERVICE_ID }
@@ -192,16 +210,24 @@ class AppViewModel(
             }
         }
         viewModelScope.launch {
-            delay(UPDATE_FIRST_CHECK_MS)
             while (true) {
-                if (prefsData.value.autoUpdate) checkForUpdates()
                 delay(UPDATE_CHECK_INTERVAL_MS)
+                val p = prefsData.value
+                if (p.autoUpdate || p.autoUpdateApp) checkForUpdates()
             }
         }
+        // A local service process can die while the socket still looks open for a moment
         viewModelScope.launch {
-            while (true) {
-                delay(CAPTCHA_PRUNE_MS)
-                pruneCaptchas()
+            localHost.running.collect { running ->
+                val state = _connection.value
+                val active = state.activeServiceId ?: return@collect
+                if (state is ConnectionState.Failed) return@collect
+                val svc = prefsData.value.services.firstOrNull { it.id == active } ?: return@collect
+                if (svc.type != ServiceType.LOCAL || active in running) return@collect
+                connectionJob?.cancel()
+                connectionJob = null
+                closeClient()
+                _connection.value = ConnectionState.Failed(active, getString(Res.string.vm_service_stopped))
             }
         }
     }
@@ -296,10 +322,17 @@ class AppViewModel(
                 when (event) {
                     is ServiceEvent.Log -> {
                         pendingLogs += event.record.let { LogEntry(logSeq++, it.time, it.level, it.message, it.attrs) }
-                        if (svcIsLocal(serviceId)) captureCaptcha(event.record)
+                        if (svcIsLocal(serviceId)) trackCaptcha(event.record)
                     }
                     is ServiceEvent.Instance -> {
                         _clientListen.update { it - event.event.instanceId }
+                        // Only a starting client can wait for a captcha; every other state ends the request
+                        when (event.event.eventType) {
+                            InstanceEventType.INSTANCE_EVENT_TYPE_STARTED,
+                            InstanceEventType.INSTANCE_EVENT_TYPE_STOPPED,
+                            InstanceEventType.INSTANCE_EVENT_TYPE_FAILED -> clearCaptcha(event.event.instanceId)
+                            else -> Unit
+                        }
                         refresh()
                     }
                     is ServiceEvent.Session -> _sessionEvents.tryEmit(event.event)
@@ -341,7 +374,7 @@ class AppViewModel(
         _instances.value = emptyList()
         _providers.value = emptyList()
         _clientListen.value = emptyMap()
-        _captchas.value.forEach { clearCaptcha(it.instanceId) }
+        resetCaptchas()
         notifier.status(0, 0)
     }
 
@@ -362,17 +395,29 @@ class AppViewModel(
     private fun svcIsLocal(serviceId: String) =
         prefsData.value.services.firstOrNull { it.id == serviceId }?.type == ServiceType.LOCAL
 
-    /** Local services run with VK_MANUAL_MANAGED, which logs where the captcha page and token endpoint are. */
-    private fun captureCaptcha(record: ru.theairblow.turnable.proto.LogRecord) {
-        if (record.message != CAPTCHA_LOG_MESSAGE) return
+    /**
+     * Local services run with VK_MANUAL_MANAGED, so the core logs every manual captcha transition:
+     * the request with its page and port, then either a finished authorization or its failure.
+     */
+    private fun trackCaptcha(record: LogRecord) {
         val attrs = record.attrs.associate { it.key to it.value }
-        val port = attrs["port"]?.toIntOrNull() ?: DEFAULT_CAPTCHA_PORT
-        val url = attrs["url"] ?: return
-        val instanceId = attrs["client_id"] ?: return
-        val name = _instances.value.firstOrNull { it.id == instanceId }?.name?.ifBlank { null } ?: instanceId
-        val request = CaptchaRequest(instanceId, name, port, url, nowUnixSeconds() + MANUAL_CAPTCHA_WINDOW_SEC)
-        _captchas.update { list -> list.filter { it.instanceId != instanceId } + request }
-        notifier.captchaRequired(request)
+        when (record.message) {
+            CAPTCHA_REQUIRED_LOG -> {
+                val instanceId = attrs["client_id"] ?: return
+                val url = attrs["url"] ?: return
+                val request = CaptchaRequest(
+                    instanceId = instanceId,
+                    name = _instances.value.firstOrNull { it.id == instanceId }?.name?.ifBlank { null } ?: instanceId,
+                    port = attrs["port"]?.toIntOrNull() ?: DEFAULT_CAPTCHA_PORT,
+                    url = url,
+                )
+                _captchas.update { list -> list.filter { it.instanceId != instanceId } + request }
+                notifier.captchaRequired(request)
+            }
+            // Both outcomes of the manual solve are logged by the core; instance events cover stops
+            CAPTCHA_AUTH_DONE_LOG, CAPTCHA_AUTH_FAILED_LOG -> attrs["client_id"]?.let(::clearCaptcha)
+            INSTANCE_START_FAILED_LOG, INSTANCE_STOPPED_LOG -> attrs["id"]?.let(::clearCaptcha)
+        }
     }
 
     fun openCaptcha(instanceId: String) {
@@ -395,6 +440,11 @@ class AppViewModel(
         notifier.captchaCleared(instanceId)
     }
 
+    /** Drops every pending request, e.g. when the service that asked for them goes away. */
+    private fun resetCaptchas() {
+        _captchas.value.forEach { clearCaptcha(it.instanceId) }
+    }
+
     private fun rememberRunning(clients: List<InstanceInfo>) {
         val running = clients.filter {
             it.status == InstanceStatus.INSTANCE_STATUS_STARTED || it.status == InstanceStatus.INSTANCE_STATUS_STARTING
@@ -404,25 +454,13 @@ class AppViewModel(
         if (next != prefsData.value.runningClients) viewModelScope.launch { prefs.update { it.copy(runningClients = next) } }
     }
 
-    private fun pruneCaptchas() {
-        val now = nowUnixSeconds()
-        _captchas.value.filter { it.deadlineSec <= now }.forEach { clearCaptcha(it.instanceId) }
-    }
-
     private fun publishStatus(list: List<InstanceInfo>) {
         val clients = list.filter { it.type == InstanceType.INSTANCE_TYPE_CLIENT }
         if (restoreArmed) rememberRunning(clients)
         notifier.status(clients.count { it.status == InstanceStatus.INSTANCE_STATUS_STARTED }, clients.size)
-        val ids = list.associateBy { it.id }
-        // Only a client still starting can be waiting for a captcha; any other state ends the request
-        val now = nowUnixSeconds()
-        _captchas.value.filter { c ->
-            when (ids[c.instanceId]?.status) {
-                null -> now - (c.deadlineSec - MANUAL_CAPTCHA_WINDOW_SEC) > 10
-                InstanceStatus.INSTANCE_STATUS_STARTING -> false
-                else -> true
-            }
-        }.forEach { clearCaptcha(it.instanceId) }
+        // An instance the service no longer lists cannot be waiting for a captcha
+        val listed = list.map { it.id }.toSet()
+        _captchas.value.filter { it.instanceId !in listed }.forEach { clearCaptcha(it.instanceId) }
     }
 
     // ─── Requests ─────────────────────────────────────────────────────────────
@@ -677,6 +715,12 @@ class AppViewModel(
         }
     }
 
+    /** The release a local service actually runs: its pin, or the newest installed binary. */
+    suspend fun localCoreVersion(serviceId: String): String? {
+        val svc = prefsData.value.services.firstOrNull { it.id == serviceId } ?: return null
+        return svc.version.ifBlank { localHost.installedVersions().firstOrNull() ?: DEFAULT_CORE_VERSION }
+    }
+
     /** A pinned version wins, then the newest installed release, then the default one, which gets downloaded. */
     private suspend fun resolveVersion(svc: ServiceConfig): String {
         if (svc.version.isNotBlank()) {
@@ -695,26 +739,33 @@ class AppViewModel(
     }
 
     /**
-     * Looks for a newer app release and a core release newer than what a local service runs. Unless [force],
-     * the check is skipped when one ran recently, and a core release the user declined stays quiet.
+     * Looks for a newer app release and a core release newer than what a local service runs.
+     * [manual] is the user asking, which ignores the toggles and the recent-check window;
+     * [ignoreInterval] alone only skips that window, for the check on launch.
      */
-    suspend fun checkForUpdates(force: Boolean = false): Result<UpdateCheck> = runCatching {
+    suspend fun checkForUpdates(manual: Boolean = false, ignoreInterval: Boolean = manual): Result<UpdateCheck> = runCatching {
         val now = nowUnixSeconds()
-        val p = prefsData.value
-        if (!force && now - p.lastUpdateCheckSec < UPDATE_CHECK_INTERVAL_MS / 1000) {
+        val p = prefs.data.first()
+        if (!ignoreInterval && now - p.lastUpdateCheckSec < UPDATE_CHECK_INTERVAL_MS / 1000) {
             return@runCatching UpdateCheck(_update.value, _appUpdate.value)
         }
-        prefs.update { it.copy(lastUpdateCheckSec = now) }
+        // Asking by hand brings back releases that were dismissed
+        prefs.update {
+            if (manual) it.copy(lastUpdateCheckSec = now, dismissedUpdate = "", dismissedAppUpdate = "")
+            else it.copy(lastUpdateCheckSec = now)
+        }
+        val dismissed = if (manual) "" else p.dismissedUpdate
         // A failed app check keeps the previous answer; a failed core check still fails the whole check
-        val app = runCatching { fetchAppUpdate() }.getOrElse { _appUpdate.value }
+        val app = if (manual || p.autoUpdateApp) runCatching { fetchAppUpdate() }.getOrElse { _appUpdate.value }
+        else _appUpdate.value
         val appChanged = app != _appUpdate.value
         _appUpdate.value = app
-        val latest = localHost.fetchAvailableVersions().firstOrNull()
-            ?: return@runCatching UpdateCheck(_update.value, app)
+        val versions = if (manual || p.autoUpdate) localHost.fetchAvailableVersions() else emptyList()
+        val latest = versions.firstOrNull() ?: return@runCatching UpdateCheck(_update.value, app)
         val found = p.services.filter { it.type == ServiceType.LOCAL && it.customCorePath.isBlank() }.firstNotNullOfOrNull { svc ->
             val current = svc.version.ifBlank { localHost.installedVersions().firstOrNull() ?: DEFAULT_CORE_VERSION }
             CoreUpdate(svc.id, svc.name, latest).takeIf { compareVersions(latest, current) > 0 }
-        }?.takeIf { force || it.version != p.dismissedUpdate }
+        }?.takeIf { it.version != dismissed }
         if (found != _update.value || appChanged) {
             _update.value = found
             if (found != null) notifier.updateAvailable(found, app != null) else notifier.updateCleared()
@@ -748,9 +799,46 @@ class AppViewModel(
         notifier.updateCleared()
     }
 
-    fun updateAutoUpdate(value: Boolean) {
-        viewModelScope.launch { prefs.update { it.copy(autoUpdate = value) } }
-        if (!value) clearUpdate()
+    /** The app's own release is offered on the Clients tab until the user says later. */
+    fun dismissAppUpdate() {
+        val offered = _appUpdate.value ?: return
+        viewModelScope.launch { prefs.update { it.copy(dismissedAppUpdate = offered.version) } }
+    }
+
+    fun updateAutoCheck(value: Boolean) {
+        viewModelScope.launch { prefs.update { it.copy(autoUpdate = value, autoUpdateApp = value) } }
+        if (!value) {
+            clearUpdate()
+            _appUpdate.value = null
+        }
+    }
+
+    /** Downloads the offered app release and hands it to the platform installer. */
+    fun installAppUpdate() {
+        val offered = _appUpdate.value ?: return
+        if (_installingApp.value) return
+        viewModelScope.launch {
+            _installingApp.value = true
+            try {
+                appInstaller.install(offered)
+                notify(getString(Res.string.vm_app_update_opened))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: AppInstallException) {
+                notify(
+                    when (e.failure) {
+                        AppInstallFailure.NO_INSTALLER -> getString(Res.string.vm_app_update_no_installer)
+                        AppInstallFailure.PERMISSION -> getString(Res.string.vm_app_update_permission)
+                        AppInstallFailure.DOWNLOAD_FAILED -> getString(Res.string.vm_app_update_download_failed)
+                        AppInstallFailure.OPEN_FAILED -> getString(Res.string.vm_app_update_open_failed)
+                    },
+                )
+            } catch (e: Exception) {
+                notify(getString(Res.string.vm_app_update_failed, e.message.orEmpty()))
+            } finally {
+                _installingApp.value = false
+            }
+        }
     }
 
     /** Switches [serviceId] to the newest release and restarts it if running; returns the version now in use. */

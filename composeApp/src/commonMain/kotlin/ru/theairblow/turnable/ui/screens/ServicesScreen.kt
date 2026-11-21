@@ -257,6 +257,7 @@ private fun ServiceDetail(
     val instances by vm.instances.collectAsStateWithLifecycle()
     val providers by vm.providers.collectAsStateWithLifecycle()
     val status = rememberServiceStatus(vm, svc)
+    val coreVersion = rememberCoreVersion(vm, svc)
     val scope = rememberCoroutineScope()
     val copy = rememberCopier()
     var confirmDelete by remember { mutableStateOf(false) }
@@ -354,8 +355,7 @@ private fun ServiceDetail(
                 if (isLocal) {
                     InfoRow(
                         stringResource(Res.string.service_version),
-                        if (svc.customCorePath.isNotBlank()) stringResource(Res.string.service_custom_core)
-                        else svc.version.ifBlank { stringResource(Res.string.service_newest_installed) },
+                        if (svc.customCorePath.isNotBlank()) stringResource(Res.string.service_custom_core) else coreVersion,
                     )
                     InfoRow(
                         stringResource(Res.string.service_captcha),

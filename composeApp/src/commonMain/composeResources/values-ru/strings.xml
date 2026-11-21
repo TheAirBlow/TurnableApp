@@ -54,10 +54,10 @@
     <string name="status_process_stopped">Процесс остановлен</string>
 
     <!-- Connection gate -->
-    <string name="gate_connecting_to">Подключение: %1$s…</string>
+    <string name="gate_connecting_to">Подключение к %1$s…</string>
     <string name="gate_connecting">Подключение…</string>
     <string name="gate_attempt">Попытка %1$d</string>
-    <string name="gate_cannot_reach">Не удаётся подключиться: %1$s</string>
+    <string name="gate_cannot_reach">Не удаётся подключиться к %1$s</string>
     <string name="gate_service_not_running">Сервис Turnable не запущен</string>
     <string name="gate_retrying_in"> · повтор через %1$d с</string>
     <string name="gate_services">Сервисы</string>
@@ -105,9 +105,6 @@
     <string name="clients_usage_expires_in"> · истекает через %1$s</string>
     <string name="clients_account_page">Страница аккаунта</string>
     <string name="clients_support">Поддержка</string>
-    <string name="clients_update_available">Доступен Turnable %1$s</string>
-    <string name="clients_update_body">При установке %1$s перезапустится, и соединения ненадолго прервутся.</string>
-    <string name="clients_update_app_outdated">Доступно обновление приложения %1$s. Сначала обновите приложение: новому ядру может понадобиться новая версия.</string>
 
     <plurals name="clients_added">
         <item quantity="one">Добавлен %1$d клиент</item>
@@ -182,13 +179,13 @@
     <string name="client_new_title">Новый клиент</string>
     <string name="client_start_count">Запустить %1$d</string>
     <string name="client_raw_label">Ссылка turnable:// или JSON</string>
-    <string name="client_raw_hint">Один конфиг на строку; несколько строк запускают несколько клиентов</string>
+    <string name="client_raw_hint">Один конфиг на строку, несколько строк запускают несколько клиентов</string>
     <string name="client_bulk_detected">Обнаружено конфигураций: %1$d. Каждый клиент получит свой случайный локальный порт и имя из своей ссылки.</string>
     <string name="client_bulk_autostart_hint">Восстанавливать этих клиентов при перезапуске сервиса</string>
     <string name="client_name_hint">По умолчанию берётся имя из конфига</string>
     <string name="client_listen_address">Локальный адрес прослушивания</string>
-    <string name="client_listen_suggested">Ссылка предлагает свои порты; они используются, если не изменить это поле</string>
-    <string name="client_listen_hint">Первый маршрут слушает здесь; следующие маршруты используют порты подряд</string>
+    <string name="client_listen_suggested">Ссылка предлагает свои порты, они используются, если не изменить это поле</string>
+    <string name="client_listen_hint">Первый маршрут слушает здесь, следующие маршруты используют порты подряд</string>
     <string name="client_new_random_port">Новый случайный порт</string>
     <string name="client_connection_type">Тип подключения</string>
     <string name="client_type_direct_hint">Напрямую к назначению, не рекомендуется</string>
@@ -352,7 +349,7 @@
     <string name="stats_sessions">Сессии</string>
     <string name="stats_sessions_value">%1$d · %2$d кан.</string>
     <string name="stats_uptime">Время работы</string>
-    <string name="stats_counted_hint">Считается на стороне сервера: «вверх» — это то, что клиенты отправили в туннель.</string>
+    <string name="stats_counted_hint">Считается на стороне сервера, «вверх» — это то, что клиенты отправили в туннель.</string>
     <string name="stats_users_n">Пользователи (%1$d)</string>
     <string name="stats_no_users">С момента запуска сервера никто не подключался.</string>
     <string name="stats_last_seen">Был в сети %1$s</string>
@@ -366,7 +363,7 @@
     <string name="stats_kick_session_body">Закроет туннели этой сессии. Клиент обычно переподключается.</string>
     <string name="stats_kick_failed">Не удалось отключить</string>
     <string name="stats_collect_title">Собрать статистику?</string>
-    <string name="stats_collect_body">Вернёт объём трафика каждого пользователя с прошлого сбора и начнёт считать заново. Панели используют это для биллинга; после сбора здесь панель не увидит этот трафик.</string>
+    <string name="stats_collect_body">Вернёт объём трафика каждого пользователя с прошлого сбора и начнёт считать заново. Панели используют это для биллинга, поэтому после сбора здесь панель не увидит этот трафик.</string>
     <string name="stats_collect_failed">Не удалось собрать статистику</string>
     <string name="stats_usage_since">Трафик с прошлого сбора</string>
     <string name="stats_usage_label">↑ %1$s  ↓ %2$s</string>
@@ -401,7 +398,6 @@
     <string name="service_details">Подробности</string>
     <string name="service_version">Версия</string>
     <string name="service_custom_core">Пользовательское ядро</string>
-    <string name="service_newest_installed">Последнее установленное</string>
     <string name="service_captcha">Капча</string>
     <string name="service_captcha_always_manual">Всегда вручную</string>
     <string name="service_captcha_automatic">Автоматически, вручную при ошибке</string>
@@ -420,7 +416,7 @@
     <string name="service_live_logs">Логи в реальном времени</string>
     <string name="service_remove_title">Удалить %1$s?</string>
     <string name="service_remove_local_body">Процесс локального сервиса будет остановлен. Сохранённые экземпляры останутся на устройстве и вернутся, если добавить сервис снова с тем же ID.</string>
-    <string name="service_remove_remote_body">Сам сервис не затрагивается; удаляется только это сохранённое подключение.</string>
+    <string name="service_remove_remote_body">Сам сервис не затрагивается, удаляется только это сохранённое подключение.</string>
     <string name="service_process_output">Вывод процесса</string>
     <string name="service_add_title">Добавить сервис</string>
     <string name="service_edit_title">Изменить сервис</string>
@@ -487,11 +483,9 @@
     <string name="settings_captcha_hint">Turnable пытается решить капчу платформы сам. Если не получается, он уведомляет вас, и вы решаете её на странице, которая уже заполнена.</string>
     <string name="settings_force_manual">Всегда решать капчу вручную</string>
     <string name="settings_force_manual_hint">Пропускает автоматическую попытку. При изменении перезапускает сервис</string>
-    <string name="settings_advanced">Дополнительно</string>
+    <string name="settings_general">Основное</string>
     <string name="settings_advanced_mode">Расширенный режим</string>
     <string name="settings_advanced_mode_hint">Добавляет вкладки для управления сервисами, серверами и провайдерами. Без него Turnable работает просто как клиент</string>
-    <string name="settings_auto_update_services">Автоматически обновлять локальные сервисы</string>
-    <string name="settings_auto_update_hint">Проверяет новые релизы каждые несколько часов и спрашивает перед установкой</string>
     <string name="settings_restore_running">Переподключать клиентов при запуске</string>
     <string name="settings_restore_running_hint">Запускает клиентов, которые работали при закрытии приложения</string>
     <string name="settings_auto_connect">Подключаться при запуске</string>
@@ -502,7 +496,6 @@
     <string name="settings_restore_clipboard">Восстановить из буфера обмена</string>
     <string name="settings_no_backup">В буфере обмена нет резервной копии Turnable</string>
     <string name="settings_nothing_new">Нечего импортировать</string>
-    <string name="settings_about">О приложении</string>
     <string name="settings_app_description">Туннелирует трафик через инфраструктуру звонков платформы.</string>
     <string name="settings_version">Версия</string>
     <string name="settings_service_protocol">Протокол сервиса</string>
@@ -512,16 +505,29 @@
     <string name="settings_core_file">Файл ядра</string>
     <string name="settings_needs_min">Требуется %1$s или новее.</string>
     <string name="settings_version_checks_off">Проверки версии отключены.</string>
-    <string name="settings_check_updates">Проверить обновления</string>
-    <string name="settings_checking">Проверка…</string>
     <string name="settings_logs">Логи</string>
-    <string name="settings_update_automatically">Обновлять автоматически</string>
-    <string name="settings_up_to_date">Turnable обновлён</string>
-    <string name="settings_update_available">Доступен Turnable %1$s</string>
-    <string name="settings_app_update_available">Доступно обновление приложения %1$s</string>
-    <string name="settings_app_update_hint">Обновите приложение до ядра: новому ядру может понадобиться новая версия.</string>
-    <string name="settings_open_release">Страница релиза</string>
-    <string name="settings_check_failed">Не удалось проверить обновления: %1$s</string>
+
+    <!-- Updates -->
+    <string name="update_title">Обновления</string>
+    <string name="update_check_now">Проверить</string>
+    <string name="update_checking">Проверка…</string>
+    <string name="update_status_current">Всё обновлено</string>
+    <string name="update_status_available">Есть обновления</string>
+    <string name="update_status_failed">Не удалось проверить обновления</string>
+    <string name="update_last_checked">Проверено: %1$s</string>
+    <string name="update_app_name">Приложение</string>
+    <string name="update_core_name">Сервис</string>
+    <string name="update_version_change">%1$s → %2$s</string>
+    <string name="update_version_current">%1$s · актуальная версия</string>
+    <string name="update_auto">Проверять автоматически</string>
+    <string name="update_auto_hint">Ищет новые версии приложения и сервиса каждые несколько часов и спрашивает, прежде чем что-то установить</string>
+    <string name="update_downloading_installer">Загрузка установщика…</string>
+    <string name="update_installing">Установка…</string>
+    <string name="update_app_title">Доступно обновление приложения</string>
+    <string name="update_app_body">Версия %1$s готова к установке.</string>
+    <string name="update_core_title">Доступно обновление сервиса</string>
+    <string name="update_core_body">Версия %1$s. Сервис перезапустится, поэтому соединения ненадолго прервутся.</string>
+    <string name="update_app_first">Сначала обновите приложение, новому сервису может понадобиться новая версия.</string>
 
     <plurals name="settings_imported">
         <item quantity="one">Импортирован %1$d сервис</item>
@@ -571,7 +577,7 @@
     <string name="desktop_captcha_balloon">%1$s. Нажмите, чтобы решить.</string>
     <string name="desktop_update_title">Доступно обновление</string>
     <string name="desktop_update_message">Доступен Turnable %1$s. Откройте приложение, чтобы обновить.</string>
-    <string name="desktop_update_app_outdated">Доступен Turnable %1$s. Сначала обновите приложение: новому ядру может понадобиться новая версия.</string>
+    <string name="desktop_update_app_outdated">Доступен Turnable %1$s. Сначала обновите приложение, новому ядру может понадобиться новая версия.</string>
 
     <!-- View model messages -->
     <string name="vm_connection_failed">Не удалось подключиться</string>
@@ -588,6 +594,13 @@
     <string name="vm_no_release">Релиз Turnable не найден</string>
     <string name="vm_custom_core_in_use">Используется пользовательское ядро. Очистите его, чтобы следовать релизам.</string>
     <string name="vm_default_service_name">Это устройство</string>
+    <string name="vm_service_stopped">Сервис остановился</string>
+    <string name="vm_app_update_opened">Установщик открыт. Следуйте его шагам, чтобы завершить.</string>
+    <string name="vm_app_update_no_installer">Для этого устройства установщик приложения не опубликован</string>
+    <string name="vm_app_update_permission">Разрешите установку приложений для Turnable в открывшихся настройках и повторите попытку</string>
+    <string name="vm_app_update_download_failed">Не удалось скачать обновление</string>
+    <string name="vm_app_update_open_failed">Не удалось открыть установщик</string>
+    <string name="vm_app_update_failed">Не удалось установить обновление: %1$s</string>
 
     <plurals name="vm_links_failed">
         <item quantity="one">%1$d ссылка из %2$s не запустилась</item>

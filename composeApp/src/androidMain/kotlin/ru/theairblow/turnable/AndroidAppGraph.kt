@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.content.ContextCompat
 import ru.theairblow.turnable.data.AppPreferences
+import ru.theairblow.turnable.service.AndroidAppInstaller
 import ru.theairblow.turnable.service.JvmLocalServiceHost
 import ru.theairblow.turnable.viewmodel.AppViewModel
 
@@ -16,13 +17,18 @@ object AndroidAppGraph {
      * The view model lives as long as the process, not the activity: the foreground service keeps the app
      * alive in the background, and captcha prompts must keep arriving while no screen is open.
      */
-    class Graph(val prefs: AppPreferences, val localHost: AndroidLocalServiceHost, val notifier: AndroidNotifier) {
-        val viewModel: AppViewModel by lazy { AppViewModel(prefs, localHost, notifier) }
+    class Graph(
+        val prefs: AppPreferences,
+        val localHost: AndroidLocalServiceHost,
+        val notifier: AndroidNotifier,
+        val appInstaller: AndroidAppInstaller,
+    ) {
+        val viewModel: AppViewModel by lazy { AppViewModel(prefs, localHost, appInstaller, notifier) }
     }
 
     fun get(context: Context): Graph = initialized ?: synchronized(this) {
         initialized ?: context.applicationContext.let { app ->
-            Graph(AppPreferences(app), AndroidLocalServiceHost(app), AndroidNotifier(app))
+            Graph(AppPreferences(app), AndroidLocalServiceHost(app), AndroidNotifier(app), AndroidAppInstaller(app))
         }.also { initialized = it }
     }
 }

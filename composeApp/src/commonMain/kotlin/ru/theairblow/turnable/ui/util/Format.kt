@@ -50,5 +50,8 @@ fun formatClock(unixNanos: Long): String {
     return "${two(t.hour)}:${two(t.minute)}:${two(t.second)}.${(t.nanosecond / 1_000_000).toString().padStart(3, '0')}"
 }
 
+/** A version as a release tag, so "1.2.0" reads like the "v1.2.0" tags of releases. */
+fun String.asTag(): String = if (startsWith("v")) this else "v$this"
+
 /** First 8 characters of an id, for compact display. */
 fun String.shortId(): String = if (length > 8) take(8) else this

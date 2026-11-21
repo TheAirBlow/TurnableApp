@@ -9,31 +9,30 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.service.DownloadProgress
+import ru.theairblow.turnable.ui.util.formatBytes
 import turnable.composeapp.generated.resources.*
 
-/** Progress bar with the release name and transferred size. */
+/** Progress bar with a [label] and the transferred size; indeterminate while [progress] is null or has no total. */
 @Composable
-fun DownloadBar(progress: DownloadProgress, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        val fraction = progress.fraction
+fun DownloadBar(progress: DownloadProgress?, label: String, modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        val fraction = progress?.fraction
         if (fraction != null) LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth())
         else LinearProgressIndicator(Modifier.fillMaxWidth())
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(stringResource(Res.string.download_version, progress.version), style = MaterialTheme.typography.bodySmall)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                if (progress.total > 0) stringResource(Res.string.download_of, formatMb(progress.bytes), formatMb(progress.total))
-                else formatMb(progress.bytes),
+                label, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+            if (progress != null && progress.bytes > 0) Text(
+                if (progress.total > 0) stringResource(Res.string.download_of, formatBytes(progress.bytes), formatBytes(progress.total))
+                else formatBytes(progress.bytes),
                 style = MaterialTheme.typography.bodySmall,
             )
         }
     }
-}
-
-@Composable
-private fun formatMb(bytes: Long): String {
-    val tenths = bytes * 10 / (1024 * 1024)
-    return stringResource(Res.string.unit_mb, "${tenths / 10}.${tenths % 10}")
 }

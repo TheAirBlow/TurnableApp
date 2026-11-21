@@ -8,7 +8,6 @@ data class CaptchaRequest(
     val port: Int,
     /** The call page to open. */
     val url: String,
-    val deadlineSec: Long,
 ) {
     val id: String get() = instanceId
 }

@@ -103,15 +103,9 @@ To add a language, copy a `values-ru` directory to the matching `values-<code>` 
 
 ## Version Management
 
-Current version: **1.0** (1.0.0 in compose desktop)
+Tagged CI builds pass the version in as Gradle properties: `-PappVersion` sets the Android `versionName` and the desktop `packageVersion`, and `-PappVersionCode` sets the Android `versionCode`. Local builds fall back to `1.0` and `1`.
 
-To update:
-1. Edit `composeApp/build.gradle.kts`:
-   - `versionCode` (Android)
-   - `versionName` (Android, e.g., "1.0", "1.1")
-   - `packageVersion` (Desktop, e.g., "1.0.0", "1.1.0")
-
-2. Version must match pattern: MAJOR.MINOR[.PATCH]
+`composeApp/build.gradle.kts` writes `appVersion` into `APP_VERSION`, which the app reports in its user agent and compares against release tags when checking for updates. Keep the three parts in the MAJOR.MINOR[.PATCH] pattern.
 
 ## Signing Releases (Android)
 

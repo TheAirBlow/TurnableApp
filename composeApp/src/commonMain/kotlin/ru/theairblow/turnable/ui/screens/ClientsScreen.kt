@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,8 +35,6 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material.icons.filled.SystemUpdate
-import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -71,15 +70,13 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.config.splitConfigs
 import ru.theairblow.turnable.platform.CaptchaRequest
-import ru.theairblow.turnable.platform.CoreUpdate
 import ru.theairblow.turnable.proto.InstanceInfo
 import ru.theairblow.turnable.proto.InstanceStatus
 import ru.theairblow.turnable.proto.InstanceType
 import ru.theairblow.turnable.subscription.Subscription
 import ru.theairblow.turnable.ui.components.AdaptiveListDetail
-import ru.theairblow.turnable.service.AppUpdate
-import ru.theairblow.turnable.service.DownloadProgress
-import ru.theairblow.turnable.ui.components.DownloadBar
+import ru.theairblow.turnable.ui.components.AppUpdateBanner
+import ru.theairblow.turnable.ui.components.CoreUpdateBanner
 import ru.theairblow.turnable.ui.components.EmptyState
 import ru.theairblow.turnable.ui.components.IconTile
 import ru.theairblow.turnable.ui.components.ListCard
@@ -163,8 +160,17 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
     val appUpdate by vm.appUpdate.collectAsStateWithLifecycle()
     val installing by vm.updating.collectAsStateWithLifecycle()
     val download by vm.coreDownload.collectAsStateWithLifecycle()
+    val appInstalling by vm.installingApp.collectAsStateWithLifecycle()
+    val appDownload by vm.appDownload.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val readClipboard = rememberClipboardReader()
+    val shownAppUpdate = appUpdate?.takeIf { it.version != prefs.dismissedAppUpdate }
+    val banners: @Composable (Modifier) -> Unit = { modifier ->
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            shownAppUpdate?.let { AppUpdateBanner(it, appInstalling, appDownload, vm::installAppUpdate, vm::dismissAppUpdate) }
+            update?.let { CoreUpdateBanner(it, installing, download, shownAppUpdate != null, vm::applyUpdate, vm::dismissUpdate) }
+        }
+    }
     val serviceId = (connection as? ConnectionState.Connected)?.serviceId
     val groups = groupClients(clients, prefs.subscriptions.filter { it.serviceId == serviceId })
     val grouped = groups.any { it.subscription != null }
@@ -229,32 +235,34 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
         },
     ) { padding ->
         if (clients.isEmpty() && !grouped) {
-            EmptyState(
-                Icons.Default.SettingsEthernet, stringResource(Res.string.clients_empty_title),
-                stringResource(Res.string.clients_empty_body),
-                Modifier.padding(padding),
-            ) {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { addingSubscription = readClipboard().trim().takeIf { it.startsWith("http") }.orEmpty() }) {
-                        Icon(Icons.Default.RssFeed, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
-                        Text(stringResource(Res.string.clients_add_subscription))
-                    }
-                    FilledTonalButton(onClick = { importClipboard() }) {
-                        Icon(Icons.Default.ContentPaste, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
-                        Text(stringResource(Res.string.clients_paste_link))
+            Box(Modifier.fillMaxSize().padding(padding)) {
+                EmptyState(
+                    Icons.Default.SettingsEthernet, stringResource(Res.string.clients_empty_title),
+                    stringResource(Res.string.clients_empty_body),
+                ) {
+                    FlowRow(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Button(onClick = { addingSubscription = readClipboard().trim().takeIf { it.startsWith("http") }.orEmpty() }) {
+                            Icon(Icons.Default.RssFeed, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                            Text(stringResource(Res.string.clients_add_subscription))
+                        }
+                        FilledTonalButton(onClick = { importClipboard() }) {
+                            Icon(Icons.Default.ContentPaste, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                            Text(stringResource(Res.string.clients_paste_link))
+                        }
                     }
                 }
+                banners(Modifier.align(Alignment.TopCenter).widthIn(max = 640.dp).padding(16.dp))
             }
         } else LazyColumn(
             Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            update?.let { u ->
-                item(key = "update") {
-                    UpdateBanner(u, installing, download, appUpdate, vm::applyUpdate, vm::dismissUpdate, Modifier.animateItem())
-                }
-            }
+            if (shownAppUpdate != null || update != null) item(key = "updates") { banners(Modifier.animateItem()) }
             items(captchas, key = { "captcha-${it.id}" }) { c ->
                 CaptchaBanner(c, onSolve = { vm.openCaptcha(c.instanceId) }, modifier = Modifier.animateItem())
             }
@@ -458,51 +466,6 @@ internal fun CaptchaBanner(request: CaptchaRequest, onSolve: () -> Unit, modifie
                 )
             }
             Button(onClick = onSolve) { Text(stringResource(Res.string.action_solve)) }
-        }
-    }
-}
-
-/** Offers a newer core release and waits for the user's answer; warns when the app itself is outdated. */
-@Composable
-internal fun UpdateBanner(
-    update: CoreUpdate,
-    updating: Boolean,
-    download: DownloadProgress?,
-    appUpdate: AppUpdate?,
-    onUpdate: () -> Unit,
-    onLater: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.primaryContainer) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Icon(Icons.Default.SystemUpdate, null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        stringResource(Res.string.clients_update_available, update.version),
-                        style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                    Text(
-                        stringResource(Res.string.clients_update_body, update.serviceName),
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                }
-            }
-            appUpdate?.let { app ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Default.WarningAmber, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
-                    Text(
-                        stringResource(Res.string.clients_update_app_outdated, app.version),
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
-            if (updating) {
-                if (download != null) DownloadBar(download) else LinearProgressIndicator(Modifier.fillMaxWidth())
-            } else Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
-                androidx.compose.material3.TextButton(onClick = onLater) { Text(stringResource(Res.string.action_later)) }
-                Button(onClick = onUpdate) { Text(stringResource(Res.string.action_update)) }
-            }
         }
     }
 }
