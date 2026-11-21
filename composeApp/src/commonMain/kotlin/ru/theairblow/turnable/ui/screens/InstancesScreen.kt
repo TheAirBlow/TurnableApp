@@ -60,6 +60,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.config.prettyJson
 import ru.theairblow.turnable.proto.GetInstanceResponse
 import ru.theairblow.turnable.proto.InstanceInfo
@@ -84,6 +86,7 @@ import ru.theairblow.turnable.ui.util.formatBytes
 import ru.theairblow.turnable.ui.util.shortId
 import ru.theairblow.turnable.viewmodel.AppViewModel
 import ru.theairblow.turnable.viewmodel.ConnectionState
+import turnable.composeapp.generated.resources.*
 
 private sealed interface InstancePane {
     data object Create : InstancePane
@@ -106,7 +109,7 @@ fun ServersScreen(vm: AppViewModel, openServices: () -> Unit) {
                 ServerList(vm, instances, selectedId = (pane as? InstancePane.Detail)?.id,
                     onOpen = { pane = InstancePane.Detail(it.id) }, onCreate = { pane = InstancePane.Create })
             },
-            placeholder = { EmptyState(Icons.Default.Dns, "Select a server") },
+            placeholder = { EmptyState(Icons.Default.Dns, stringResource(Res.string.servers_select)) },
         ) { p ->
             when (p) {
                 InstancePane.Create -> CreateServerPane(vm, onClose = { pane = null }, onCreated = { pane = InstancePane.Detail(it) })
@@ -120,7 +123,7 @@ fun ServersScreen(vm: AppViewModel, openServices: () -> Unit) {
                     }
                 }
                 is InstancePane.Logs -> LogsPane(
-                    vm, title = "${instances.firstOrNull { it.id == p.id }?.displayName ?: p.id} logs",
+                    vm, title = stringResource(Res.string.clients_logs_title, instances.firstOrNull { it.id == p.id }?.displayName ?: p.id),
                     onBack = { pane = InstancePane.Detail(p.id) }, instanceId = p.id,
                 )
             }
@@ -132,13 +135,23 @@ fun ServersScreen(vm: AppViewModel, openServices: () -> Unit) {
 private fun ServerList(vm: AppViewModel, instances: List<InstanceInfo>, selectedId: String?, onOpen: (InstanceInfo) -> Unit, onCreate: () -> Unit) {
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     Scaffold(
-        topBar = { PaneTopBar("Servers", busy = refreshing) { IconButton(onClick = vm::refresh) { Icon(Icons.Default.Refresh, "Refresh") } } },
+        topBar = {
+            PaneTopBar(stringResource(Res.string.servers_title), busy = refreshing) {
+                IconButton(onClick = vm::refresh) { Icon(Icons.Default.Refresh, stringResource(Res.string.action_refresh)) }
+            }
+        },
         floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = onCreate, icon = { Icon(Icons.Default.Add, null) }, text = { Text("New server") })
+            ExtendedFloatingActionButton(
+                onClick = onCreate, icon = { Icon(Icons.Default.Add, null) },
+                text = { Text(stringResource(Res.string.servers_new)) },
+            )
         },
     ) { padding ->
         if (instances.isEmpty()) {
-            EmptyState(Icons.Default.Dns, "No servers", "A server accepts tunnels from users of one of your providers.", Modifier.padding(padding))
+            EmptyState(
+                Icons.Default.Dns, stringResource(Res.string.servers_empty_title),
+                stringResource(Res.string.servers_empty_body), Modifier.padding(padding),
+            )
             return@Scaffold
         }
         LazyColumn(
@@ -149,7 +162,7 @@ private fun ServerList(vm: AppViewModel, instances: List<InstanceInfo>, selected
             items(instances, key = { it.id }) { info ->
                 ListCard(
                     title = info.displayName,
-                    subtitle = info.id.shortId() + if (info.autostart) " · autostart" else "",
+                    subtitle = info.id.shortId() + if (info.autostart) stringResource(Res.string.instance_autostart_suffix) else "",
                     selected = info.id == selectedId,
                     onClick = { onOpen(info) },
                     leading = { IconTile(Icons.Default.Dns) },
@@ -185,13 +198,20 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
     }
 
     val running = info.status == InstanceStatus.INSTANCE_STATUS_STARTED || info.status == InstanceStatus.INSTANCE_STATUS_STARTING
+    val configLabel = stringResource(Res.string.config_label)
 
     Scaffold(
         topBar = {
-            PaneTopBar(info.displayName, if (info.isClient) "Client" else "Server", onBack = onBack, busy = busy) {
-                IconButton(onClick = onLogs) { Icon(Icons.AutoMirrored.Filled.Article, "Logs") }
-                IconButton(onClick = { editing = true }) { Icon(Icons.Default.Edit, "Edit") }
-                IconButton(onClick = { confirmRemove = true }) { Icon(Icons.Default.Delete, "Remove", tint = MaterialTheme.colorScheme.error) }
+            PaneTopBar(
+                info.displayName,
+                stringResource(if (info.isClient) Res.string.instance_kind_client else Res.string.instance_kind_server),
+                onBack = onBack, busy = busy,
+            ) {
+                IconButton(onClick = onLogs) { Icon(Icons.AutoMirrored.Filled.Article, stringResource(Res.string.instance_logs)) }
+                IconButton(onClick = { editing = true }) { Icon(Icons.Default.Edit, stringResource(Res.string.action_edit)) }
+                IconButton(onClick = { confirmRemove = true }) {
+                    Icon(Icons.Default.Delete, stringResource(Res.string.action_remove), tint = MaterialTheme.colorScheme.error)
+                }
             }
         },
     ) { padding ->
@@ -205,7 +225,7 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
                     Column(Modifier.weight(1f).padding(start = 14.dp)) {
                         Text(info.displayName, style = MaterialTheme.typography.titleMedium)
                         if (group != null) Text(
-                            "From ${group.displayName}",
+                            stringResource(Res.string.instance_from_group, group.displayName),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -214,22 +234,25 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     if (running) {
                         OutlinedButton(onClick = { run { restartInstance(info.id) } }, enabled = !busy, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Default.Sync, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Restart")
+                            Icon(Icons.Default.Sync, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                            Text(stringResource(Res.string.action_restart))
                         }
                         FilledTonalButton(onClick = { run { stopInstance(info.id, keep = true) } }, enabled = !busy, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Default.Stop, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Stop")
+                            Icon(Icons.Default.Stop, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                            Text(stringResource(Res.string.action_stop))
                         }
                     } else {
                         Button(onClick = { run { restartInstance(info.id) } }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-                            Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Start")
+                            Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                            Text(stringResource(Res.string.action_start))
                         }
                     }
                 }
                 SwitchRow(
-                    "Autostart", info.autostart, { on -> run { updateInstance(info.id, autostart = on) } },
-                    "Start when the service starts",
+                    stringResource(Res.string.form_autostart), info.autostart, { on -> run { updateInstance(info.id, autostart = on) } },
+                    stringResource(Res.string.instance_autostart_hint),
                 )
-                InfoRow("ID", info.id, mono = true, copyable = true)
+                InfoRow(stringResource(Res.string.instance_id), info.id, mono = true, copyable = true)
             }
             error?.let { ErrorBanner(it) }
 
@@ -238,9 +261,9 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
             if (!info.isClient && running) ServerStatsSection(vm, info)
 
             if (d != null && d.config.isNotBlank()) {
-                SectionCard(title = "Configuration", action = {
-                    IconButton(onClick = { copy(d.config, "Config") }, Modifier.size(32.dp)) {
-                        Icon(Icons.Default.ContentCopy, "Copy config", Modifier.size(18.dp))
+                SectionCard(title = stringResource(Res.string.instance_configuration), action = {
+                    IconButton(onClick = { copy(d.config, configLabel) }, Modifier.size(32.dp)) {
+                        Icon(Icons.Default.ContentCopy, stringResource(Res.string.instance_copy_config), Modifier.size(18.dp))
                     }
                 }) {
                     Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium) {
@@ -266,11 +289,11 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
         },
     )
     if (confirmRemove) ConfirmDialog(
-        title = "Remove ${info.displayName}?",
-        text = "It is stopped and deleted together with its saved config, so it won't come back after a restart. " +
-            (if (group != null) "It belongs to ${group.displayName}, which brings it back on its next update. " else "") +
-            "Use Stop to keep it listed instead.",
-        confirmLabel = "Remove",
+        title = stringResource(Res.string.instance_remove_title, info.displayName),
+        text = stringResource(Res.string.instance_remove_body) +
+            (if (group != null) stringResource(Res.string.instance_remove_group_suffix, group.displayName) else "") +
+            stringResource(Res.string.instance_remove_stop_hint),
+        confirmLabel = stringResource(Res.string.action_remove),
         onConfirm = { scope.launch { vm.mutate { stopInstance(info.id) }.onSuccess { onBack() } } },
         onDismiss = { confirmRemove = false },
     )
@@ -288,13 +311,15 @@ private fun EditInstanceDialog(info: InstanceInfo, listenAddrs: List<String>, on
     val addrsValid = addrs.all { listenAddrPattern.matches(it) && it.substringAfterLast(':').toInt() in 0..65535 }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit ${info.displayName}") },
+        title = { Text(stringResource(Res.string.instance_edit_title, info.displayName)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextInput(name, { name = it }, "Name", isError = name.isBlank())
+                TextInput(name, { name = it }, stringResource(Res.string.form_name), isError = name.isBlank())
                 if (info.isClient) TextInput(
-                    addrText, { addrText = it }, "Listen addresses", mono = true, singleLine = false, minLines = 2, isError = !addrsValid,
-                    supporting = if (!addrsValid) "One host:port per line" else "One per line, one per route. Changing them restarts the client",
+                    addrText, { addrText = it }, stringResource(Res.string.instance_listen_addresses),
+                    mono = true, singleLine = false, minLines = 2, isError = !addrsValid,
+                    supporting = if (!addrsValid) stringResource(Res.string.instance_listen_error)
+                    else stringResource(Res.string.instance_listen_hint),
                 )
             }
         },
@@ -302,9 +327,9 @@ private fun EditInstanceDialog(info: InstanceInfo, listenAddrs: List<String>, on
             Button(
                 enabled = name.isNotBlank() && addrsValid && (name != info.name || addrsChanged),
                 onClick = { onSave(name.trim(), if (addrsChanged) addrs else emptyList()) },
-            ) { Text("Save") }
+            ) { Text(stringResource(Res.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -313,31 +338,42 @@ private fun EditInstanceDialog(info: InstanceInfo, listenAddrs: List<String>, on
 private fun ClientEndpointsCard(vm: AppViewModel, d: GetInstanceResponse) {
     val copy = rememberCopier()
     val scope = rememberCoroutineScope()
-    SectionCard(title = "Local endpoints", icon = Icons.Default.Link) {
+    SectionCard(title = stringResource(Res.string.instance_local_endpoints), icon = Icons.Default.Link) {
         if (d.listenAddrs.isEmpty()) {
-            Text("Default (127.0.0.1, random port)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                stringResource(Res.string.instance_default_endpoint),
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
-        d.listenAddrs.forEachIndexed { i, addr -> InfoRow("Route ${i + 1}", addr, mono = true, copyable = true) }
+        d.listenAddrs.forEachIndexed { i, addr ->
+            InfoRow(stringResource(Res.string.instance_route_n, i + 1), addr, mono = true, copyable = true)
+        }
         Text(
-            "Point your VPN app (e.g. WireGuard in NekoBox, MTU 1280) at these addresses.",
+            stringResource(Res.string.instance_endpoints_hint),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AssistChip(onClick = {
                 scope.launch {
                     vm.request { convertClientConfig(d.config) }
-                        .onSuccess { converted -> copy(if (d.config.trimStart().startsWith("{")) converted else d.config, "Config URL") }
-                        .onFailure { vm.notify(it.message ?: "Conversion failed") }
+                        .onSuccess {
+                            copy(
+                                if (d.config.trimStart().startsWith("{")) it else d.config,
+                                getString(Res.string.config_url_label),
+                            )
+                        }
+                        .onFailure { vm.notify(it.message ?: getString(Res.string.instance_conversion_failed)) }
                 }
-            }, label = { Text("Copy as URL") }, leadingIcon = { Icon(Icons.Default.Link, null, Modifier.size(18.dp)) })
+            }, label = { Text(stringResource(Res.string.instance_copy_as_url)) }, leadingIcon = { Icon(Icons.Default.Link, null, Modifier.size(18.dp)) })
             AssistChip(onClick = {
                 scope.launch {
-                    if (d.config.trimStart().startsWith("{")) copy(d.config, "Config JSON")
+                    val jsonLabel = getString(Res.string.config_json_label)
+                    if (d.config.trimStart().startsWith("{")) copy(d.config, jsonLabel)
                     else vm.request { convertClientConfig(d.config) }
-                        .onSuccess { copy(prettyJson(it), "Config JSON") }
-                        .onFailure { vm.notify(it.message ?: "Conversion failed") }
+                        .onSuccess { copy(prettyJson(it), jsonLabel) }
+                        .onFailure { vm.notify(it.message ?: getString(Res.string.instance_conversion_failed)) }
                 }
-            }, label = { Text("Copy as JSON") }, leadingIcon = { Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp)) })
+            }, label = { Text(stringResource(Res.string.instance_copy_as_json)) }, leadingIcon = { Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp)) })
         }
     }
 }

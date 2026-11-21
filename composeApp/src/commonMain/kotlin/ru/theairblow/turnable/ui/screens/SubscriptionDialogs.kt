@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.proto.InstanceInfo
 import ru.theairblow.turnable.subscription.Subscription
 import ru.theairblow.turnable.ui.components.EmptyState
@@ -66,6 +67,7 @@ import ru.theairblow.turnable.ui.util.formatDuration
 import ru.theairblow.turnable.ui.util.nowUnixSeconds
 import ru.theairblow.turnable.viewmodel.AppViewModel
 import ru.theairblow.turnable.viewmodel.ConnectionState
+import turnable.composeapp.generated.resources.*
 
 
 /** Remove confirmation for a subscription, with the choice to stop its clients as well. */
@@ -74,10 +76,15 @@ internal fun RemoveSubscriptionDialog(sub: Subscription, onDismiss: () -> Unit, 
     var removeClients by remember { mutableStateOf(true) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Remove ${sub.displayName}?") },
-        text = { SwitchRow("Also remove its ${sub.entries.size} client(s)", removeClients, { removeClients = it }) },
-        confirmButton = { Button(onClick = { onDismiss(); onRemove(removeClients) }) { Text("Remove") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        title = { Text(stringResource(Res.string.subscription_remove_title, sub.displayName)) },
+        text = {
+            SwitchRow(
+                stringResource(Res.string.subscription_remove_clients, sub.entries.size),
+                removeClients, { removeClients = it },
+            )
+        },
+        confirmButton = { Button(onClick = { onDismiss(); onRemove(removeClients) }) { Text(stringResource(Res.string.action_remove)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -101,14 +108,24 @@ internal fun SubscriptionDialog(
     LaunchedEffect(Unit) { if (existing == null) focus.requestFocus() }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (existing == null) "Add subscription" else "Edit subscription") },
+        title = {
+            Text(stringResource(if (existing == null) Res.string.subscription_add_title else Res.string.subscription_edit_title))
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 error?.let { ErrorBanner(it) }
-                TextInput(url, { url = it.trim(); error = null }, "Subscription URL", Modifier.focusRequester(focus), mono = true, isError = url.isNotEmpty() && !urlOk)
-                TextInput(name, { name = it }, "Name (optional)", supporting = "Defaults to the title the panel sends")
-                if (existing != null) TextInput(hours, { hours = it.filter(Char::isDigit).take(3) }, "Auto-update every (hours)",
-                    numeric = true, supporting = "0 turns automatic updates off")
+                TextInput(
+                    url, { url = it.trim(); error = null }, stringResource(Res.string.subscription_url),
+                    Modifier.focusRequester(focus), mono = true, isError = url.isNotEmpty() && !urlOk,
+                )
+                TextInput(
+                    name, { name = it }, stringResource(Res.string.subscription_name_optional),
+                    supporting = stringResource(Res.string.subscription_name_hint),
+                )
+                if (existing != null) TextInput(
+                    hours, { hours = it.filter(Char::isDigit).take(3) }, stringResource(Res.string.subscription_interval),
+                    numeric = true, supporting = stringResource(Res.string.subscription_interval_hint),
+                )
             }
         },
         confirmButton = {
@@ -120,9 +137,9 @@ internal fun SubscriptionDialog(
                 }
             }) {
                 if (busy) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                else Text(if (existing == null) "Add" else "Save")
+                else Text(stringResource(if (existing == null) Res.string.action_add else Res.string.action_save))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }

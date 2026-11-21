@@ -64,6 +64,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.config.splitConfigs
 import ru.theairblow.turnable.platform.CaptchaRequest
 import ru.theairblow.turnable.platform.CoreUpdate
@@ -85,6 +89,7 @@ import ru.theairblow.turnable.ui.util.formatDuration
 import ru.theairblow.turnable.ui.util.nowUnixSeconds
 import ru.theairblow.turnable.viewmodel.AppViewModel
 import ru.theairblow.turnable.viewmodel.ConnectionState
+import turnable.composeapp.generated.resources.*
 
 private sealed interface ClientPane {
     data object Create : ClientPane
@@ -125,7 +130,7 @@ fun ClientsScreen(vm: AppViewModel, openServices: () -> Unit) {
                 ClientList(vm, clients, selectedId = (pane as? ClientPane.Detail)?.id,
                     onOpen = { pane = ClientPane.Detail(it.id) }, onCreate = { pane = ClientPane.Create })
             },
-            placeholder = { EmptyState(Icons.Default.SettingsEthernet, "Select a client") },
+            placeholder = { EmptyState(Icons.Default.SettingsEthernet, stringResource(Res.string.clients_select)) },
         ) { p ->
             when (p) {
                 ClientPane.Create -> CreateClientPane(vm, onClose = { pane = null }, onCreated = { pane = ClientPane.Detail(it) })
@@ -135,7 +140,7 @@ fun ClientsScreen(vm: AppViewModel, openServices: () -> Unit) {
                     else InstanceDetail(vm, info, onBack = { pane = null }, onLogs = { pane = ClientPane.Logs(info.id) })
                 }
                 is ClientPane.Logs -> LogsPane(
-                    vm, title = "${clients.firstOrNull { it.id == p.id }?.displayName ?: p.id} logs",
+                    vm, title = stringResource(Res.string.clients_logs_title, clients.firstOrNull { it.id == p.id }?.displayName ?: p.id),
                     onBack = { pane = ClientPane.Detail(p.id) }, instanceId = p.id,
                 )
             }
@@ -173,39 +178,47 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
         when {
             links.isNotEmpty() -> {
                 val (started, failures) = vm.importClientLinks(links)
-                vm.notify(if (failures.isEmpty()) "Added $started client${if (started == 1) "" else "s"}" else failures.first())
+                vm.notify(
+                    if (failures.isEmpty()) getPluralString(Res.plurals.clients_added, started, started)
+                    else failures.first(),
+                )
             }
             text.startsWith("http://") || text.startsWith("https://") -> addingSubscription = text
-            else -> vm.notify("The clipboard has no turnable:// link or subscription URL")
+            else -> vm.notify(getString(Res.string.clients_clipboard_none))
         }
     }
 
     Scaffold(
         topBar = {
             PaneTopBar(
-                "Clients",
-                if (clients.isEmpty()) null else "${clients.count { it.status == InstanceStatus.INSTANCE_STATUS_STARTED }} of ${clients.size} connected",
+                stringResource(Res.string.clients_title),
+                if (clients.isEmpty()) null else stringResource(
+                    Res.string.clients_connected_of,
+                    clients.count { it.status == InstanceStatus.INSTANCE_STATUS_STARTED }, clients.size,
+                ),
                 busy = refreshing || updating,
             ) {
-                if (grouped) IconButton(onClick = { scope.launch { vm.syncAllSubscriptions(); vm.notify("Subscriptions updated") } }, enabled = !updating) {
-                    Icon(Icons.Default.Sync, "Update all subscriptions")
+                if (grouped) IconButton(onClick = {
+                    scope.launch { vm.syncAllSubscriptions(); vm.notify(getString(Res.string.clients_subscriptions_updated)) }
+                }, enabled = !updating) {
+                    Icon(Icons.Default.Sync, stringResource(Res.string.clients_update_all_desc))
                 }
             }
         },
         floatingActionButton = {
             Box {
-                ExtendedFloatingActionButton(onClick = { addMenu = true }, icon = { Icon(Icons.Default.Add, null) }, text = { Text("Add") })
+                ExtendedFloatingActionButton(onClick = { addMenu = true }, icon = { Icon(Icons.Default.Add, null) }, text = { Text(stringResource(Res.string.clients_add)) })
                 DropdownMenu(expanded = addMenu, onDismissRequest = { addMenu = false }) {
                     DropdownMenuItem(
-                        text = { Text("Subscription URL") }, leadingIcon = { Icon(Icons.Default.RssFeed, null) },
+                        text = { Text(stringResource(Res.string.clients_menu_subscription_url)) }, leadingIcon = { Icon(Icons.Default.RssFeed, null) },
                         onClick = { addMenu = false; addingSubscription = "" },
                     )
                     DropdownMenuItem(
-                        text = { Text("Import from clipboard") }, leadingIcon = { Icon(Icons.Default.ContentPaste, null) },
+                        text = { Text(stringResource(Res.string.clients_menu_import)) }, leadingIcon = { Icon(Icons.Default.ContentPaste, null) },
                         onClick = { addMenu = false; importClipboard() },
                     )
                     DropdownMenuItem(
-                        text = { Text("Manual client") }, leadingIcon = { Icon(Icons.Default.Edit, null) },
+                        text = { Text(stringResource(Res.string.clients_menu_manual)) }, leadingIcon = { Icon(Icons.Default.Edit, null) },
                         onClick = { addMenu = false; onCreate() },
                     )
                 }
@@ -214,16 +227,18 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
     ) { padding ->
         if (clients.isEmpty() && !grouped) {
             EmptyState(
-                Icons.Default.SettingsEthernet, "No clients yet",
-                "Add your provider's subscription link, or paste a turnable:// link you were given.",
+                Icons.Default.SettingsEthernet, stringResource(Res.string.clients_empty_title),
+                stringResource(Res.string.clients_empty_body),
                 Modifier.padding(padding),
             ) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(onClick = { addingSubscription = readClipboard().trim().takeIf { it.startsWith("http") }.orEmpty() }) {
-                        Icon(Icons.Default.RssFeed, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Add subscription")
+                        Icon(Icons.Default.RssFeed, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                        Text(stringResource(Res.string.clients_add_subscription))
                     }
                     FilledTonalButton(onClick = { importClipboard() }) {
-                        Icon(Icons.Default.ContentPaste, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Paste link")
+                        Icon(Icons.Default.ContentPaste, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                        Text(stringResource(Res.string.clients_paste_link))
                     }
                 }
             }
@@ -243,7 +258,7 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
                         syncing = group.subscription?.id in syncing,
                         onToggle = { collapsed = if (group.id in collapsed) collapsed - group.id else collapsed + group.id },
                         onSync = group.subscription?.let { sub ->
-                            { scope.launch { vm.syncSubscription(sub.id).onSuccess { vm.notify("${sub.displayName} updated") } } }
+                            { scope.launch { vm.syncSubscription(sub.id).onSuccess { vm.notify(getString(Res.string.clients_subscription_updated, sub.displayName)) } } }
                         },
                         onConnectAll = { scope.launch { vm.setGroupRunning(group.clients, true) } },
                         onDisconnectAll = { scope.launch { vm.setGroupRunning(group.clients, false) } },
@@ -255,7 +270,7 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
                 if (!grouped || group.id !in collapsed) {
                     if (grouped && group.clients.isEmpty()) item(key = "empty-${group.id}") {
                         Text(
-                            "No clients yet. Update the subscription to import its links.",
+                            stringResource(Res.string.clients_group_empty),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 8.dp),
                         )
@@ -277,7 +292,7 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
 
     addingSubscription?.let { initial ->
         SubscriptionDialog(null, initialUrl = initial, onDismiss = { addingSubscription = null }) { name, url, _ ->
-            vm.addSubscription(url, name).fold({ addingSubscription = null; null }, { it.message ?: "Couldn't add subscription" })
+            vm.addSubscription(url, name).fold({ addingSubscription = null; null }, { it.message ?: getString(Res.string.clients_could_not_add) })
         }
     }
     editing?.let { sub ->
@@ -304,12 +319,10 @@ private fun ClientRow(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val status = if (needsCaptcha) stringResource(Res.string.status_captcha_needed) else info.statusLabel
     ListCard(
         title = info.displayName,
-        subtitle = listOfNotNull(
-            if (needsCaptcha) "Captcha needed" else info.statusLabel,
-            address,
-        ).joinToString(" · "),
+        subtitle = listOfNotNull(status, address).joinToString(" · "),
         selected = selected,
         onClick = onClick,
         leading = { Box(Modifier.size(42.dp), Alignment.Center) { StatusDot(if (needsCaptcha) ru.theairblow.turnable.ui.components.StatusKind.Failed else info.statusKind, size = 12.dp) } },
@@ -342,47 +355,63 @@ private fun GroupHeader(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(if (sub != null) Icons.Default.RssFeed else Icons.Default.SettingsEthernet, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text(sub?.displayName ?: "Other clients", style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
-                        "${group.clients.size} client${if (group.clients.size == 1) "" else "s"} · $online connected",
+                        sub?.displayName ?: stringResource(Res.string.clients_other_group),
+                        style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        pluralStringResource(Res.plurals.clients_group_summary, group.clients.size, group.clients.size, online),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 if (syncing) CircularProgressIndicator(Modifier.size(40.dp).padding(10.dp), strokeWidth = 2.dp)
                 Box {
-                    IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Group actions") }
+                    IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(Res.string.clients_group_actions)) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         if (onSync != null) DropdownMenuItem(
-                            text = { Text("Update now") }, leadingIcon = { Icon(Icons.Default.Sync, null) },
+                            text = { Text(stringResource(Res.string.clients_update_now)) }, leadingIcon = { Icon(Icons.Default.Sync, null) },
                             onClick = { menu = false; onSync() },
                         )
                         DropdownMenuItem(
-                            text = { Text("Connect all") }, leadingIcon = { Icon(Icons.Default.PlayArrow, null) },
+                            text = { Text(stringResource(Res.string.clients_connect_all)) }, leadingIcon = { Icon(Icons.Default.PlayArrow, null) },
                             onClick = { menu = false; onConnectAll() },
                         )
                         DropdownMenuItem(
-                            text = { Text("Disconnect all") }, leadingIcon = { Icon(Icons.Default.Stop, null) },
+                            text = { Text(stringResource(Res.string.clients_disconnect_all)) }, leadingIcon = { Icon(Icons.Default.Stop, null) },
                             onClick = { menu = false; onDisconnectAll() },
                         )
                         if (sub != null) {
-                            DropdownMenuItem(text = { Text("Edit") }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = { menu = false; onEdit() })
                             DropdownMenuItem(
-                                text = { Text("Remove") }, leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
+                                text = { Text(stringResource(Res.string.action_edit)) },
+                                leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = { menu = false; onEdit() },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(Res.string.action_remove)) },
+                                leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
                                 onClick = { menu = false; onRemove() },
                             )
                         }
                     }
                 }
-                Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, if (expanded) "Collapse" else "Expand", Modifier.padding(end = 12.dp))
+                Icon(
+                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    stringResource(if (expanded) Res.string.clients_collapse else Res.string.clients_expand),
+                    Modifier.padding(end = 12.dp),
+                )
             }
             if (sub != null && expanded) Column(Modifier.padding(end = 12.dp, bottom = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 sub.usage?.let { u ->
                     val used = u.upload + u.download
-                    Text(
-                        formatBytes(used) + (if (u.total > 0) " of ${formatBytes(u.total)}" else " used") +
-                            (if (u.expire <= 0) "" else if (u.expire <= nowUnixSeconds()) " · expired" else " · expires in ${formatDuration(u.expire - nowUnixSeconds())}"),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                    val now = nowUnixSeconds()
+                    val usedText = if (u.total > 0) {
+                        stringResource(Res.string.clients_usage_of, formatBytes(used), formatBytes(u.total))
+                    } else stringResource(Res.string.clients_usage_used, formatBytes(used))
+                    val expiry = when {
+                        u.expire <= 0 -> ""
+                        u.expire <= now -> stringResource(Res.string.clients_usage_expired)
+                        else -> stringResource(Res.string.clients_usage_expires_in, formatDuration(u.expire - now))
+                    }
+                    Text(usedText + expiry, style = MaterialTheme.typography.bodySmall)
                     if (u.total > 0) LinearProgressIndicator(progress = { (used.toFloat() / u.total).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                 }
                 if (sub.announce.isNotBlank()) Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -392,11 +421,11 @@ private fun GroupHeader(
                 if (sub.webPageUrl.isNotBlank() || sub.supportUrl.isNotBlank()) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (sub.webPageUrl.isNotBlank()) AssistChip(
                         onClick = { runCatching { uriHandler.openUri(sub.webPageUrl) } },
-                        label = { Text("Account page") }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.OpenInNew, null, Modifier.size(18.dp)) },
+                        label = { Text(stringResource(Res.string.clients_account_page)) }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.OpenInNew, null, Modifier.size(18.dp)) },
                     )
                     if (sub.supportUrl.isNotBlank()) AssistChip(
                         onClick = { runCatching { uriHandler.openUri(sub.supportUrl) } },
-                        label = { Text("Support") }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.HelpOutline, null, Modifier.size(18.dp)) },
+                        label = { Text(stringResource(Res.string.clients_support)) }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.HelpOutline, null, Modifier.size(18.dp)) },
                     )
                 }
                 if (sub.lastError.isNotBlank()) Text(sub.lastError, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
@@ -412,13 +441,16 @@ internal fun CaptchaBanner(request: CaptchaRequest, onSolve: () -> Unit, modifie
         Row(Modifier.padding(start = 16.dp, end = 12.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Security, null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                Text("Captcha needed", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onTertiaryContainer)
+                Text(
+                    stringResource(Res.string.status_captcha_needed),
+                    style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
                 Text(
                     request.name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onTertiaryContainer,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
-            Button(onClick = onSolve) { Text("Solve") }
+            Button(onClick = onSolve) { Text(stringResource(Res.string.action_solve)) }
         }
     }
 }
@@ -431,9 +463,12 @@ internal fun UpdateBanner(update: CoreUpdate, updating: Boolean, download: Downl
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Icon(Icons.Default.SystemUpdate, null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
                 Column(Modifier.weight(1f)) {
-                    Text("Turnable ${update.version} is available", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     Text(
-                        "Installing it restarts ${update.serviceName} and drops its connections for a moment.",
+                        stringResource(Res.string.clients_update_available, update.version),
+                        style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Text(
+                        stringResource(Res.string.clients_update_body, update.serviceName),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
@@ -441,8 +476,8 @@ internal fun UpdateBanner(update: CoreUpdate, updating: Boolean, download: Downl
             if (updating) {
                 if (download != null) DownloadBar(download) else LinearProgressIndicator(Modifier.fillMaxWidth())
             } else Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.align(Alignment.End)) {
-                androidx.compose.material3.TextButton(onClick = onLater) { Text("Later") }
-                Button(onClick = onUpdate) { Text("Update") }
+                androidx.compose.material3.TextButton(onClick = onLater) { Text(stringResource(Res.string.action_later)) }
+                Button(onClick = onUpdate) { Text(stringResource(Res.string.action_update)) }
             }
         }
     }

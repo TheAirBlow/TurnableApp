@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_status_name">Состояние подключения</string>
+    <string name="notification_channel_status_desc">Показывается, пока работает сервис Turnable</string>
+    <string name="notification_channel_captcha_name">Требуется капча</string>
+    <string name="notification_channel_captcha_desc">Подключение не продолжится, пока вы не решите капчу</string>
+    <string name="notification_channel_update_name">Обновления</string>
+    <string name="notification_channel_update_desc">Можно установить новый релиз Turnable</string>
+
+    <string name="notification_captcha_title">Требуется капча</string>
+    <string name="notification_captcha_text">%1$s не может подключиться, пока вы не решите капчу</string>
+    <string name="notification_captcha_big">%1$s не может подключиться, пока вы не решите капчу. Нажмите, чтобы решить.</string>
+
+    <string name="notification_update_title">Доступен Turnable %1$s</string>
+    <string name="notification_update_text">При установке %1$s ненадолго перезапустится</string>
+    <string name="notification_action_update">Обновить</string>
+    <string name="notification_action_later">Позже</string>
+
+    <string name="notification_status_app_name">Turnable</string>
+    <string name="notification_status_connected">Подключено</string>
+    <string name="notification_status_running">Сервис работает, клиентов пока нет</string>
+    <string name="notification_action_disconnect_all">Отключить все</string>
+
+    <plurals name="notification_status_count">
+        <item quantity="one">Подключено: %1$d из %2$d клиента</item>
+        <item quantity="few">Подключено: %1$d из %2$d клиентов</item>
+        <item quantity="many">Подключено: %1$d из %2$d клиентов</item>
+        <item quantity="other">Подключено: %1$d из %2$d клиента</item>
+    </plurals>
+</resources>

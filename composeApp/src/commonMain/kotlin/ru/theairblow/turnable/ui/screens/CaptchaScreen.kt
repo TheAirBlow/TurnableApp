@@ -10,9 +10,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.platform.CaptchaRequest
 import ru.theairblow.turnable.platform.captchaInApp
 import ru.theairblow.turnable.ui.components.PaneTopBar
+import turnable.composeapp.generated.resources.*
 
 /**
  * Hosts the call page, fills in everything except the captcha and hands the tokens to the service.
@@ -24,10 +26,12 @@ expect fun CaptchaWebView(request: CaptchaRequest, onSolved: () -> Unit, modifie
 /** Full-screen manual captcha flow for one client. */
 @Composable
 fun CaptchaScreen(request: CaptchaRequest, onSolved: () -> Unit, onClose: () -> Unit) {
-    Scaffold(topBar = { PaneTopBar("Solve captcha", request.name, onBack = onClose) }) { padding ->
+    Scaffold(topBar = {
+        PaneTopBar(stringResource(Res.string.captcha_solve_title), request.name, onBack = onClose)
+    }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             if (captchaInApp) Text(
-                "Wait a second and solve the captcha when it appears.",
+                stringResource(Res.string.captcha_wait_hint),
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             )

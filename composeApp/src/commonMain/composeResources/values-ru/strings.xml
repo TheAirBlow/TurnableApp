@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tabs -->
+    <string name="tab_clients">Клиенты</string>
+    <string name="tab_services">Сервисы</string>
+    <string name="tab_servers">Серверы</string>
+    <string name="tab_providers">Провайдеры</string>
+    <string name="tab_settings">Настройки</string>
+
+    <!-- Common actions -->
+    <string name="action_cancel">Отмена</string>
+    <string name="action_close">Закрыть</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_add">Добавить</string>
+    <string name="action_edit">Изменить</string>
+    <string name="action_remove">Удалить</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_back">Назад</string>
+    <string name="action_dismiss">Закрыть</string>
+    <string name="action_refresh">Обновить</string>
+    <string name="action_reload">Обновить</string>
+    <string name="action_retry">Повторить</string>
+    <string name="action_retry_now">Повторить</string>
+    <string name="action_start">Запустить</string>
+    <string name="action_stop">Остановить</string>
+    <string name="action_restart">Перезапустить</string>
+    <string name="action_connect">Подключиться</string>
+    <string name="action_disconnect">Отключиться</string>
+    <string name="action_paste">Вставить</string>
+    <string name="action_generate">Создать</string>
+    <string name="action_create">Создать</string>
+    <string name="action_done">Готово</string>
+    <string name="action_later">Позже</string>
+    <string name="action_update">Обновить</string>
+    <string name="action_solve">Решить</string>
+    <string name="action_kick">Отключить</string>
+    <string name="action_collect">Собрать</string>
+    <string name="action_copy_label">Копировать: %1$s</string>
+    <string name="action_copied">Скопировано: %1$s</string>
+
+    <!-- Statuses -->
+    <string name="status_connected">Подключено</string>
+    <string name="status_running">Работает</string>
+    <string name="status_connecting">Подключение</string>
+    <string name="status_starting">Запуск</string>
+    <string name="status_failed">Ошибка</string>
+    <string name="status_stopped">Остановлено</string>
+    <string name="status_unknown">Неизвестно</string>
+    <string name="status_captcha_needed">Нужна капча</string>
+    <string name="status_in_use">Используется</string>
+    <string name="status_unreachable">Недоступно</string>
+    <string name="status_idle">Неактивен</string>
+    <string name="status_process_running">Процесс работает</string>
+    <string name="status_process_stopped">Процесс остановлен</string>
+
+    <!-- Connection gate -->
+    <string name="gate_connecting_to">Подключение: %1$s…</string>
+    <string name="gate_connecting">Подключение…</string>
+    <string name="gate_attempt">Попытка %1$d</string>
+    <string name="gate_cannot_reach">Не удаётся подключиться: %1$s</string>
+    <string name="gate_service_not_running">Сервис Turnable не запущен</string>
+    <string name="gate_retrying_in"> · повтор через %1$d с</string>
+    <string name="gate_services">Сервисы</string>
+    <string name="gate_settings">Настройки</string>
+    <string name="gate_setting_up">Настройка Turnable…</string>
+    <string name="gate_starting_turnable">Запуск Turnable…</string>
+    <string name="gate_downloading_once">Сервис Turnable скачивается, это происходит один раз.</string>
+    <string name="gate_no_service">Нет подключённого сервиса</string>
+    <string name="gate_stopped">Turnable остановлен</string>
+    <string name="gate_pick_service">Выберите или добавьте сервис Turnable, чтобы управлять его серверами, клиентами и провайдерами.</string>
+    <string name="gate_open_services">Открыть сервисы</string>
+    <string name="gate_start">Запустить</string>
+    <string name="gate_service_word">сервис</string>
+    <string name="gate_the_service_word">сервис</string>
+
+    <!-- Clients -->
+    <string name="clients_title">Клиенты</string>
+    <string name="clients_connected_of">Подключено %1$d из %2$d</string>
+    <string name="clients_update_all_desc">Обновить все подписки</string>
+    <string name="clients_subscriptions_updated">Подписки обновлены</string>
+    <string name="clients_subscription_updated">Обновлено: %1$s</string>
+    <string name="clients_add">Добавить</string>
+    <string name="clients_menu_subscription_url">Ссылка на подписку</string>
+    <string name="clients_menu_import">Импорт из буфера обмена</string>
+    <string name="clients_menu_manual">Клиент вручную</string>
+    <string name="clients_empty_title">Клиентов пока нет</string>
+    <string name="clients_empty_body">Добавьте ссылку на подписку провайдера или вставьте выданную вам ссылку turnable://.</string>
+    <string name="clients_add_subscription">Добавить подписку</string>
+    <string name="clients_paste_link">Вставить ссылку</string>
+    <string name="clients_group_empty">Клиентов пока нет. Обновите подписку, чтобы импортировать её ссылки.</string>
+    <string name="clients_could_not_add">Не удалось добавить подписку</string>
+    <string name="clients_clipboard_none">В буфере обмена нет ссылки turnable:// или URL подписки</string>
+    <string name="clients_select">Выберите клиента</string>
+    <string name="clients_logs_title">Логи: %1$s</string>
+    <string name="clients_other_group">Другие клиенты</string>
+    <string name="clients_group_actions">Действия группы</string>
+    <string name="clients_update_now">Обновить сейчас</string>
+    <string name="clients_connect_all">Подключить все</string>
+    <string name="clients_disconnect_all">Отключить все</string>
+    <string name="clients_collapse">Свернуть</string>
+    <string name="clients_expand">Развернуть</string>
+    <string name="clients_usage_used">Использовано %1$s</string>
+    <string name="clients_usage_of">%1$s из %2$s</string>
+    <string name="clients_usage_expired"> · истёк</string>
+    <string name="clients_usage_expires_in"> · истекает через %1$s</string>
+    <string name="clients_account_page">Страница аккаунта</string>
+    <string name="clients_support">Поддержка</string>
+    <string name="clients_update_available">Доступен Turnable %1$s</string>
+    <string name="clients_update_body">При установке %1$s перезапустится, и соединения ненадолго прервутся.</string>
+
+    <plurals name="clients_added">
+        <item quantity="one">Добавлен %1$d клиент</item>
+        <item quantity="few">Добавлено %1$d клиента</item>
+        <item quantity="many">Добавлено %1$d клиентов</item>
+        <item quantity="other">Добавлено %1$d клиента</item>
+    </plurals>
+
+    <plurals name="clients_group_summary">
+        <item quantity="one">%1$d клиент · в сети %2$d</item>
+        <item quantity="few">%1$d клиента · в сети %2$d</item>
+        <item quantity="many">%1$d клиентов · в сети %2$d</item>
+        <item quantity="other">%1$d клиента · в сети %2$d</item>
+    </plurals>
+
+    <!-- Subscriptions -->
+    <string name="subscription_remove_title">Удалить %1$s?</string>
+    <string name="subscription_remove_clients">Также удалить клиентов: %1$d</string>
+    <string name="subscription_add_title">Добавить подписку</string>
+    <string name="subscription_edit_title">Изменить подписку</string>
+    <string name="subscription_url">Ссылка на подписку</string>
+    <string name="subscription_name_optional">Название (необязательно)</string>
+    <string name="subscription_name_hint">По умолчанию берётся название из панели</string>
+    <string name="subscription_interval">Автообновление каждые (часов)</string>
+    <string name="subscription_interval_hint">0 отключает автообновление</string>
+    <string name="subscription_link_n">Ссылка %1$d</string>
+    <string name="subscription_http_error">Подписка вернула HTTP %1$d</string>
+    <string name="subscription_no_links">В подписке нет ссылок turnable://</string>
+
+    <!-- Instance forms -->
+    <string name="form_mode_form">Форма</string>
+    <string name="form_mode_json">JSON</string>
+    <string name="form_mode_link_json">Ссылка / JSON</string>
+    <string name="form_name">Название</string>
+    <string name="form_instance_id">ID экземпляра (необязательно)</string>
+    <string name="form_instance_id_hint">Оставьте пустым, чтобы сервис создал его сам</string>
+    <string name="form_autostart">Автозапуск</string>
+    <string name="form_autostart_hint">Восстанавливать этот экземпляр при перезапуске сервиса</string>
+    <string name="form_still_needed">Ещё нужно: %1$s</string>
+    <string name="form_config_accepted">Сервис принимает этот конфиг</string>
+    <string name="form_server_name_hint">например, основной релей</string>
+    <string name="form_server_new_title">Новый сервер</string>
+    <string name="form_provider_section">Провайдер</string>
+    <string name="form_no_provider_error">Сначала создайте провайдера (вкладка «Провайдеры»). Он хранит маршруты и пользователей, которых обслуживает этот сервер.</string>
+    <string name="form_provider">Провайдер</string>
+    <string name="form_select_placeholder">Выберите…</string>
+    <string name="form_configuration">Конфигурация</string>
+    <string name="form_server_config_json">JSON конфигурации сервера</string>
+    <string name="form_platform">Платформа</string>
+    <string name="form_call_id">ID звонка</string>
+    <string name="form_call_id_hint">ID звонка или встречи на платформе</string>
+    <string name="form_public_ip">Публичный IP / хост</string>
+    <string name="form_listen_address">Адрес прослушивания</string>
+    <string name="form_protocol">Протокол</string>
+    <string name="form_cloak">Маскировка</string>
+    <string name="form_server_key_pair">Пара ключей сервера</string>
+    <string name="form_server_key_pair_hint">Клиенты используют публичный ключ для шифрования рукопожатия.</string>
+    <string name="form_regenerate">Создать заново</string>
+    <string name="form_public_key">Публичный ключ</string>
+    <string name="form_private_key">Приватный ключ</string>
+    <string name="form_instance_section">Экземпляр</string>
+    <string name="form_routes">Маршруты</string>
+    <string name="form_route_n">Маршрут %1$d</string>
+    <string name="form_remove_route">Удалить маршрут</string>
+    <string name="form_route_id">ID маршрута</string>
+    <string name="form_socket">Сокет</string>
+    <string name="form_transport">Транспорт</string>
+    <string name="form_add_route">Добавить маршрут</string>
+    <string name="form_encryption">Шифрование</string>
+    <string name="form_mask">Маска</string>
+
+    <string name="client_new_title">Новый клиент</string>
+    <string name="client_start_count">Запустить %1$d</string>
+    <string name="client_raw_label">Ссылка turnable:// или JSON</string>
+    <string name="client_raw_hint">Один конфиг на строку; несколько строк запускают несколько клиентов</string>
+    <string name="client_bulk_detected">Обнаружено конфигураций: %1$d. Каждый клиент получит свой случайный локальный порт и имя из своей ссылки.</string>
+    <string name="client_bulk_autostart_hint">Восстанавливать этих клиентов при перезапуске сервиса</string>
+    <string name="client_name_hint">По умолчанию берётся имя из конфига</string>
+    <string name="client_listen_address">Локальный адрес прослушивания</string>
+    <string name="client_listen_suggested">Ссылка предлагает свои порты; они используются, если не изменить это поле</string>
+    <string name="client_listen_hint">Первый маршрут слушает здесь; следующие маршруты используют порты подряд</string>
+    <string name="client_new_random_port">Новый случайный порт</string>
+    <string name="client_connection_type">Тип подключения</string>
+    <string name="client_type_direct_hint">Напрямую к назначению, не рекомендуется</string>
+    <string name="client_user_uuid">UUID пользователя</string>
+    <string name="client_gateway">Шлюз (хост:порт)</string>
+    <string name="client_peers">Пиры</string>
+    <string name="client_server_public_key">Публичный ключ сервера</string>
+    <string name="client_display_name">Отображаемое имя (в конфиге)</string>
+    <string name="client_mpath_mixed">Маршруты mpath нельзя смешивать с другими транспортами в одном конфиге</string>
+    <string name="client_started_of">Запущено: %1$d из %2$d</string>
+
+    <string name="missing_call_id">ID звонка</string>
+    <string name="missing_user_uuid">UUID пользователя</string>
+    <string name="missing_gateway">шлюз</string>
+    <string name="missing_peers">пиры</string>
+    <string name="missing_server_public_key">публичный ключ сервера</string>
+    <string name="missing_route_id">ID маршрута</string>
+    <string name="missing_public_ip">публичный IP</string>
+    <string name="missing_listen_address">адрес прослушивания</string>
+    <string name="missing_key_pair">пара ключей</string>
+
+    <string name="choice_proto_dtls">Чистый DTLS, простой</string>
+    <string name="choice_proto_srtp">DTLS+SRTP, похож на медиатрафик</string>
+    <string name="choice_proto_none">Без протокола, не рекомендуется</string>
+    <string name="choice_transport_mpath">Мультипуть, рекомендуется</string>
+    <string name="choice_transport_kcp">Надёжный поток, для TCP</string>
+    <string name="choice_transport_sctp">Поддерживается, но не идеально</string>
+    <string name="choice_transport_none">Только для UDP-маршрутов</string>
+
+    <!-- Servers and instances -->
+    <string name="servers_title">Серверы</string>
+    <string name="servers_new">Новый сервер</string>
+    <string name="servers_empty_title">Серверов нет</string>
+    <string name="servers_empty_body">Сервер принимает туннели от пользователей одного из ваших провайдеров.</string>
+    <string name="servers_select">Выберите сервер</string>
+    <string name="instance_autostart_suffix"> · автозапуск</string>
+    <string name="instance_kind_client">Клиент</string>
+    <string name="instance_kind_server">Сервер</string>
+    <string name="instance_logs">Логи</string>
+    <string name="instance_from_group">Из группы %1$s</string>
+    <string name="instance_autostart_hint">Запускать вместе с сервисом</string>
+    <string name="instance_id">ID</string>
+    <string name="instance_configuration">Конфигурация</string>
+    <string name="instance_copy_config">Копировать конфиг</string>
+    <string name="instance_remove_title">Удалить %1$s?</string>
+    <string name="instance_remove_body">Он будет остановлен и удалён вместе с сохранённым конфигом, поэтому после перезапуска не вернётся. </string>
+    <string name="instance_remove_group_suffix">Он принадлежит группе %1$s, которая вернёт его при следующем обновлении. </string>
+    <string name="instance_remove_stop_hint">Используйте «Остановить», чтобы оставить его в списке.</string>
+    <string name="instance_edit_title">Изменить %1$s</string>
+    <string name="instance_listen_addresses">Адреса прослушивания</string>
+    <string name="instance_listen_error">Один хост:порт на строку</string>
+    <string name="instance_listen_hint">По одному на строку и на маршрут. Изменение перезапускает клиента</string>
+    <string name="instance_local_endpoints">Локальные адреса</string>
+    <string name="instance_default_endpoint">По умолчанию (127.0.0.1, случайный порт)</string>
+    <string name="instance_route_n">Маршрут %1$d</string>
+    <string name="instance_endpoints_hint">Направьте VPN-приложение (например, WireGuard в NekoBox, MTU 1280) на эти адреса.</string>
+    <string name="instance_copy_as_url">Копировать как URL</string>
+    <string name="instance_copy_as_json">Копировать как JSON</string>
+    <string name="instance_conversion_failed">Ошибка преобразования</string>
+    <string name="config_url_label">URL конфига</string>
+    <string name="config_json_label">JSON конфига</string>
+    <string name="config_label">Конфиг</string>
+
+    <!-- Logs -->
+    <string name="logs_lines">Строк: %1$d из %2$d</string>
+    <string name="logs_copy_shown">Копировать показанные строки</string>
+    <string name="logs_clear">Очистить</string>
+    <string name="logs_jump_latest">К последним строкам</string>
+    <string name="logs_search_hint">Поиск по сообщениям и атрибутам</string>
+    <string name="logs_clear_search">Очистить поиск</string>
+    <string name="logs_level_all">Все</string>
+    <string name="logs_level_debug">Отладка</string>
+    <string name="logs_level_info">Инфо</string>
+    <string name="logs_level_warn">Предупр.</string>
+    <string name="logs_level_error">Ошибка</string>
+    <string name="logs_waiting">Ожидание логов</string>
+    <string name="logs_nothing_matches">Ничего не найдено</string>
+    <string name="logs_copy_label">Логи</string>
+
+    <!-- Providers -->
+    <string name="providers_title">Провайдеры</string>
+    <string name="providers_new">Новый провайдер</string>
+    <string name="providers_empty_title">Провайдеров нет</string>
+    <string name="providers_empty_body">Провайдер хранит маршруты (назначения) и пользователей, которых принимают серверы.</string>
+    <string name="providers_select">Выберите провайдера</string>
+    <string name="provider_new_title">Новый провайдер</string>
+    <string name="provider_name">Название</string>
+    <string name="provider_uuid_optional">UUID (необязательно)</string>
+    <string name="provider_uuid_hint">Если пусто, сервис создаст его сам</string>
+    <string name="provider_type">Тип</string>
+    <string name="provider_type_raw_hint">Маршруты и пользователи хранятся в сервисе</string>
+    <string name="provider_type_json_hint">Читается из JSON-файла на хосте сервиса</string>
+    <string name="provider_path">Путь к файлу на хосте сервиса</string>
+    <string name="provider_initial_config">Начальный JSON конфигурации (необязательно)</string>
+    <string name="provider_initial_config_hint">Оставьте пустым, чтобы начать без маршрутов и пользователей, и добавьте их позже</string>
+    <string name="provider_invalid_config">Некорректная конфигурация провайдера</string>
+    <string name="provider_used_by_server">Используется сервером</string>
+    <string name="provider_not_used">Не используется</string>
+    <string name="provider_rename">Переименовать</string>
+    <string name="provider_uuid">UUID</string>
+    <string name="provider_routes_n">Маршруты (%1$d)</string>
+    <string name="provider_add_route">Добавить маршрут</string>
+    <string name="provider_no_routes">Маршрутов нет. Маршрут — это назначение, к которому могут подключаться пользователи.</string>
+    <string name="provider_users_n">Пользователи (%1$d)</string>
+    <string name="provider_add_user">Добавить пользователя</string>
+    <string name="provider_no_users">Пользователей нет. Каждый пользователь получает UUID, который работает как пароль.</string>
+    <string name="provider_force_turn"> · принудительный TURN</string>
+    <string name="provider_routes_prefix">Маршруты: %1$s</string>
+    <string name="provider_routes_none">нет</string>
+    <string name="provider_share_config">Поделиться конфигом клиента</string>
+    <string name="provider_raw_config">Исходная конфигурация</string>
+    <string name="provider_rename_title">Переименовать провайдера</string>
+    <string name="provider_delete_route_title">Удалить маршрут %1$s?</string>
+    <string name="provider_delete_route_body">Пользователи потеряют доступ к этому назначению.</string>
+    <string name="provider_delete_user_title">Удалить пользователя?</string>
+    <string name="provider_delete_user_body">%1$s будет отключён и больше не сможет подключиться.</string>
+    <string name="provider_delete_title">Удалить %1$s?</string>
+    <string name="provider_delete_body">Все его маршруты и пользователи будут удалены.</string>
+
+    <plurals name="provider_user_line">
+        <item quantity="one">%1$s · %2$d пир</item>
+        <item quantity="few">%1$s · %2$d пира</item>
+        <item quantity="many">%1$s · %2$d пиров</item>
+        <item quantity="other">%1$s · %2$d пира</item>
+    </plurals>
+
+    <string name="route_add_title">Добавить маршрут</string>
+    <string name="route_edit_title">Изменить маршрут</string>
+    <string name="route_id">ID маршрута</string>
+    <string name="route_id_hint">Тот же ID заменит маршрут</string>
+    <string name="route_display_name">Отображаемое имя</string>
+    <string name="route_destination_ip">IP назначения</string>
+    <string name="route_port">Порт</string>
+    <string name="route_mpath_encrypts">mpath всегда шифрует всё</string>
+    <string name="route_tcp_needs_transport">TCP-маршрутам нужен транспорт (mpath или kcp)</string>
+
+    <string name="user_title">Пользователь</string>
+    <string name="user_uuid">UUID</string>
+    <string name="user_uuid_hint">Работает как пароль пользователя</string>
+    <string name="user_force_turn">Принудительный TURN</string>
+    <string name="user_allowed_routes">Разрешённые маршруты</string>
+    <string name="user_add_routes_first">Сначала добавьте маршруты провайдеру.</string>
+
+    <string name="share_title">Поделиться конфигом клиента</string>
+    <string name="share_start_server_error">Сначала запустите сервер, использующий этого провайдера</string>
+    <string name="share_server">Сервер</string>
+    <string name="share_routes">Маршруты</string>
+    <string name="share_no_routes">У этого пользователя нет разрешённых маршрутов.</string>
+    <string name="share_could_not_read_config">Не удалось прочитать конфигурацию сервера</string>
+    <string name="share_client_link_label">Ссылка клиента</string>
+    <string name="share_generate_copy">Создать и скопировать</string>
+    <string name="share_copy_again">Скопировать ещё раз</string>
+
+    <!-- Server statistics -->
+    <string name="stats_unavailable">Статистика недоступна: %1$s</string>
+    <string name="stats_traffic">Трафик</string>
+    <string name="stats_collect_usage">Собрать статистику</string>
+    <string name="stats_uploaded">Отправлено</string>
+    <string name="stats_downloaded">Получено</string>
+    <string name="stats_online_users">Пользователей онлайн</string>
+    <string name="stats_sessions">Сессии</string>
+    <string name="stats_sessions_value">%1$d · %2$d кан.</string>
+    <string name="stats_uptime">Время работы</string>
+    <string name="stats_counted_hint">Считается на стороне сервера: «вверх» — это то, что клиенты отправили в туннель.</string>
+    <string name="stats_users_n">Пользователи (%1$d)</string>
+    <string name="stats_no_users">С момента запуска сервера никто не подключался.</string>
+    <string name="stats_last_seen">Был в сети %1$s</string>
+    <string name="stats_no_traffic">Трафика нет.</string>
+    <string name="stats_live_sessions_n">Активные сессии (%1$d)</string>
+    <string name="stats_nobody_connected">Сейчас никто не подключён.</string>
+    <string name="stats_session_line">%1$s · %2$s · %3$d кан.</string>
+    <string name="stats_kick_user_title">Отключить пользователя?</string>
+    <string name="stats_kick_session_title">Отключить сессию?</string>
+    <string name="stats_kick_user_body">Закроет все туннели пользователя %1$s. Он сможет подключиться снова, если не удалить его из провайдера.</string>
+    <string name="stats_kick_session_body">Закроет туннели этой сессии. Клиент обычно переподключается.</string>
+    <string name="stats_kick_failed">Не удалось отключить</string>
+    <string name="stats_collect_title">Собрать статистику?</string>
+    <string name="stats_collect_body">Вернёт объём трафика каждого пользователя с прошлого сбора и начнёт считать заново. Панели используют это для биллинга; после сбора здесь панель не увидит этот трафик.</string>
+    <string name="stats_collect_failed">Не удалось собрать статистику</string>
+    <string name="stats_usage_since">Трафик с прошлого сбора</string>
+    <string name="stats_usage_label">↑ %1$s  ↓ %2$s</string>
+
+    <plurals name="stats_sessions_channels">
+        <item quantity="one">%1$d сессия · %2$d кан.</item>
+        <item quantity="few">%1$d сессии · %2$d кан.</item>
+        <item quantity="many">%1$d сессий · %2$d кан.</item>
+        <item quantity="other">%1$d сессии · %2$d кан.</item>
+    </plurals>
+
+    <plurals name="stats_closed_tunnels">
+        <item quantity="one">Закрыт %1$d туннель</item>
+        <item quantity="few">Закрыто %1$d туннеля</item>
+        <item quantity="many">Закрыто %1$d туннелей</item>
+        <item quantity="other">Закрыто %1$d туннеля</item>
+    </plurals>
+
+    <!-- Services -->
+    <string name="services_title">Сервисы</string>
+    <string name="services_add">Добавить сервис</string>
+    <string name="services_empty_title">Сервисов пока нет</string>
+    <string name="services_empty_body">Запустите сервис Turnable на этом устройстве или подключитесь к сервису, работающему в другом месте.</string>
+    <string name="services_select">Выберите сервис</string>
+    <string name="services_select_body">Здесь появятся его подключение и элементы управления.</string>
+    <string name="services_service_logs">Логи сервиса</string>
+    <string name="service_local">Локальный сервис</string>
+    <string name="service_remote">Удалённый сервис</string>
+    <string name="service_retrying_in"> · повтор через %1$d с</string>
+    <string name="service_starting">Запуск…</string>
+    <string name="service_start_connect">Запустить и подключиться</string>
+    <string name="service_details">Подробности</string>
+    <string name="service_version">Версия</string>
+    <string name="service_custom_core">Пользовательское ядро</string>
+    <string name="service_newest_installed">Последнее установленное</string>
+    <string name="service_captcha">Капча</string>
+    <string name="service_captcha_always_manual">Всегда вручную</string>
+    <string name="service_captcha_automatic">Автоматически, вручную при ошибке</string>
+    <string name="service_socket">Сокет</string>
+    <string name="service_host">Хост</string>
+    <string name="service_port">Порт</string>
+    <string name="service_auth_key">Ключ авторизации</string>
+    <string name="service_auth_none">Нет (сервис должен разрешать анонимный доступ)</string>
+    <string name="service_key">Ключ сервиса</string>
+    <string name="service_key_not_pinned">Не закреплён</string>
+    <string name="service_id">ID</string>
+    <string name="service_authorize_title">Авторизовать это приложение</string>
+    <string name="service_authorize_hint">Добавьте этот публичный ключ в allowed_keys в файле service.json сервиса.</string>
+    <string name="service_copy_public_key">Копировать публичный ключ</string>
+    <string name="service_public_key_label">Публичный ключ</string>
+    <string name="service_live_logs">Логи в реальном времени</string>
+    <string name="service_remove_title">Удалить %1$s?</string>
+    <string name="service_remove_local_body">Процесс локального сервиса будет остановлен. Сохранённые экземпляры останутся на устройстве и вернутся, если добавить сервис снова с тем же ID.</string>
+    <string name="service_remove_remote_body">Сам сервис не затрагивается; удаляется только это сохранённое подключение.</string>
+    <string name="service_process_output">Вывод процесса</string>
+    <string name="service_add_title">Добавить сервис</string>
+    <string name="service_edit_title">Изменить сервис</string>
+    <string name="service_type_on_device">На этом устройстве</string>
+    <string name="service_type_remote">Удалённый</string>
+    <string name="service_name_hint_local">например, туннели телефона</string>
+    <string name="service_name_hint_remote">например, VPS во Франкфурте</string>
+    <string name="service_release_section">Релиз Turnable</string>
+    <string name="service_version_field">Версия</string>
+    <string name="service_latest_release">Последний релиз</string>
+    <string name="service_version_tag">Тег версии</string>
+    <string name="service_version_tag_hint">например, v1.4.0</string>
+    <string name="service_reload_releases">Обновить список релизов</string>
+    <string name="service_releases_error">Не удалось загрузить релизы: %1$s</string>
+    <string name="service_release_download_hint">Релиз скачивается при первом запуске. Сервис хранит экземпляры и провайдеров на этом устройстве.</string>
+    <string name="service_min_version_hint">Релизы старше %1$s не поддерживаются. Пользовательское ядро пропускает эту проверку.</string>
+    <string name="service_core_file">Файл ядра</string>
+    <string name="service_captcha_section">Капча</string>
+    <string name="service_force_manual">Всегда решать капчу вручную</string>
+    <string name="service_force_manual_hint">Пропускает автоматическую попытку для всех клиентов этого сервиса</string>
+    <string name="service_address_section">Адрес</string>
+    <string name="service_host_field">Хост</string>
+    <string name="service_port_field">Порт</string>
+    <string name="service_auth_section">Аутентификация</string>
+    <string name="service_auth_hint">Нужно, если у сервиса есть пара ключей. Создайте её здесь и добавьте публичный ключ в allowed_keys сервиса.</string>
+    <string name="service_generate_key_pair">Создать пару ключей</string>
+    <string name="service_client_pub_key">Публичный ключ клиента (base64)</string>
+    <string name="service_client_priv_key">Приватный ключ клиента (base64)</string>
+    <string name="service_pinned_key">Закреплённый публичный ключ сервиса (необязательно)</string>
+    <string name="service_invalid_key">Некорректный публичный ключ ML-KEM-768</string>
+    <string name="service_priv_key_hint">Нужен, чтобы доказать, что приложению принадлежит публичный ключ</string>
+    <string name="service_priv_key_stays">Остаётся на этом устройстве</string>
+    <string name="service_pinned_key_hint">Отказывается подключаться к сервису с другим ключом</string>
+    <string name="service_subtitle_local">Это устройство · %1$s</string>
+    <string name="service_subtitle_custom_core">пользовательское ядро</string>
+    <string name="service_subtitle_latest">последний релиз</string>
+
+    <plurals name="service_counts_servers">
+        <item quantity="one">%1$d сервер</item>
+        <item quantity="few">%1$d сервера</item>
+        <item quantity="many">%1$d серверов</item>
+        <item quantity="other">%1$d сервера</item>
+    </plurals>
+    <plurals name="service_counts_clients">
+        <item quantity="one">%1$d клиент</item>
+        <item quantity="few">%1$d клиента</item>
+        <item quantity="many">%1$d клиентов</item>
+        <item quantity="other">%1$d клиента</item>
+    </plurals>
+    <plurals name="service_counts_providers">
+        <item quantity="one">%1$d провайдер</item>
+        <item quantity="few">%1$d провайдера</item>
+        <item quantity="many">%1$d провайдеров</item>
+        <item quantity="other">%1$d провайдера</item>
+    </plurals>
+
+    <!-- Settings -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_appearance">Оформление</string>
+    <string name="settings_theme_system">Системная</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Тёмная</string>
+    <string name="settings_captcha">Капча</string>
+    <string name="settings_captcha_hint">Turnable пытается решить капчу платформы сам. Если не получается, он уведомляет вас, и вы решаете её на странице, которая уже заполнена.</string>
+    <string name="settings_force_manual">Всегда решать капчу вручную</string>
+    <string name="settings_force_manual_hint">Пропускает автоматическую попытку. При изменении перезапускает сервис</string>
+    <string name="settings_advanced">Дополнительно</string>
+    <string name="settings_advanced_mode">Расширенный режим</string>
+    <string name="settings_advanced_mode_hint">Добавляет вкладки для управления сервисами, серверами и провайдерами. Без него Turnable работает просто как клиент</string>
+    <string name="settings_auto_update_services">Автоматически обновлять локальные сервисы</string>
+    <string name="settings_auto_update_hint">Проверяет новые релизы каждые несколько часов и спрашивает перед установкой</string>
+    <string name="settings_restore_running">Переподключать клиентов при запуске</string>
+    <string name="settings_restore_running_hint">Запускает клиентов, которые работали при закрытии приложения</string>
+    <string name="settings_auto_connect">Подключаться при запуске</string>
+    <string name="settings_auto_connect_hint">При открытии приложения переподключаться к последнему сервису (и запускать его, если он локальный)</string>
+    <string name="settings_backup">Резервная копия</string>
+    <string name="settings_backup_hint">Копирует сохранённые сервисы и подписки, включая ключи, в буфер обмена в виде JSON. Держите её в секрете.</string>
+    <string name="settings_copy_backup">Копировать резервную копию</string>
+    <string name="settings_restore_clipboard">Восстановить из буфера обмена</string>
+    <string name="settings_no_backup">В буфере обмена нет резервной копии Turnable</string>
+    <string name="settings_nothing_new">Нечего импортировать</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_app_description">Туннелирует трафик через инфраструктуру звонков платформы.</string>
+    <string name="settings_version">Версия</string>
+    <string name="settings_service_protocol">Протокол сервиса</string>
+    <string name="settings_user_agent">User agent</string>
+    <string name="settings_service_section">Сервис</string>
+    <string name="settings_release">Релиз</string>
+    <string name="settings_core_file">Файл ядра</string>
+    <string name="settings_needs_min">Требуется %1$s или новее.</string>
+    <string name="settings_version_checks_off">Проверки версии отключены.</string>
+    <string name="settings_check_updates">Проверить обновления</string>
+    <string name="settings_checking">Проверка…</string>
+    <string name="settings_logs">Логи</string>
+    <string name="settings_update_automatically">Обновлять автоматически</string>
+    <string name="settings_up_to_date">Turnable обновлён</string>
+    <string name="settings_update_available">Доступен Turnable %1$s</string>
+    <string name="settings_check_failed">Не удалось проверить обновления: %1$s</string>
+
+    <plurals name="settings_imported">
+        <item quantity="one">Импортирован %1$d сервис</item>
+        <item quantity="few">Импортировано %1$d сервиса</item>
+        <item quantity="many">Импортировано %1$d сервисов</item>
+        <item quantity="other">Импортировано %1$d сервиса</item>
+    </plurals>
+
+    <!-- Core picker and downloads -->
+    <string name="core_choose_binary">Выберите бинарник Turnable</string>
+    <string name="core_use_custom">Использовать своё ядро…</string>
+    <string name="core_change_core">Сменить ядро…</string>
+    <string name="core_use_releases">Использовать релизы</string>
+    <string name="download_version">Скачивание %1$s</string>
+    <string name="download_of">%1$s из %2$s</string>
+    <string name="unit_mb">%1$s МБ</string>
+
+    <!-- Formatting -->
+    <string name="unit_byte">%1$s Б</string>
+    <string name="unit_kb">%1$s КБ</string>
+    <string name="unit_gb">%1$s ГБ</string>
+    <string name="unit_tb">%1$s ТБ</string>
+    <string name="duration_days_hours">%1$d д %2$d ч</string>
+    <string name="duration_hours_minutes">%1$d ч %2$d мин</string>
+    <string name="duration_minutes_seconds">%1$d мин %2$d с</string>
+    <string name="duration_seconds">%1$d с</string>
+    <string name="time_ago">%1$s назад</string>
+    <string name="time_never">никогда</string>
+
+    <!-- Captcha -->
+    <string name="captcha_solve_title">Решение капчи</string>
+    <string name="captcha_wait_hint">Подождите немного и решите капчу, когда она появится.</string>
+    <string name="captcha_solve_in_browser">Решите капчу в браузере</string>
+    <string name="captcha_userscript_step1">1. Установите менеджер юзерскриптов, например Tampermonkey, затем установите юзерскрипт Turnable.</string>
+    <string name="captcha_userscript_step2">2. Откройте страницу звонка в приватном окне и решите капчу. Юзерскрипт войдёт в звонок и отправит токены обратно, а ссылка укажет ему нужный порт.</string>
+    <string name="captcha_open_userscript">Открыть юзерскрипт</string>
+    <string name="captcha_open_call_page">Открыть страницу звонка</string>
+    <string name="captcha_copy_call_link">Копировать ссылку на страницу звонка</string>
+    <string name="captcha_call_link_label">Ссылка на страницу звонка</string>
+    <string name="captcha_endpoint_failed">Не удаётся связаться с эндпоинтом капчи сервиса. Возможно, запрос истёк.</string>
+    <string name="captcha_tokens_rejected">Сервис не принял токены. Возможно, запрос истёк.</string>
+    <string name="captcha_vk_logged_in">Эта страница авторизована в VK, что небезопасно для вашего аккаунта. Выйдите из аккаунта в браузере, который вы использовали раньше, и повторите попытку.</string>
+
+    <!-- Desktop notifications -->
+    <string name="desktop_captcha_title">Требуется капча</string>
+    <string name="desktop_captcha_message">%1$s не может подключиться, пока вы не решите капчу</string>
+    <string name="desktop_captcha_balloon">%1$s. Нажмите, чтобы решить.</string>
+    <string name="desktop_update_title">Доступно обновление</string>
+    <string name="desktop_update_message">Доступен Turnable %1$s. Откройте приложение, чтобы обновить.</string>
+
+    <!-- View model messages -->
+    <string name="vm_connection_failed">Не удалось подключиться</string>
+    <string name="vm_service_gone">Сервис больше не существует</string>
+    <string name="vm_captcha_solved">Капча решена, подключение…</string>
+    <string name="vm_not_connected">Нет подключения к сервису</string>
+    <string name="vm_request_failed">Запрос не выполнен</string>
+    <string name="vm_connect_first">Сначала подключитесь к сервису</string>
+    <string name="vm_update_failed">Обновление не удалось</string>
+    <string name="vm_could_not_start">Не удалось запустить %1$s: %2$s</string>
+    <string name="vm_core_too_old">Turnable %1$s слишком старый. Приложению нужен %2$s или новее, либо пользовательское ядро.</string>
+    <string name="vm_updated_to">Обновлено до %1$s</string>
+    <string name="vm_update_failed_detail">Обновление не удалось: %1$s</string>
+    <string name="vm_no_release">Релиз Turnable не найден</string>
+    <string name="vm_custom_core_in_use">Используется пользовательское ядро. Очистите его, чтобы следовать релизам.</string>
+    <string name="vm_default_service_name">Это устройство</string>
+
+    <plurals name="vm_links_failed">
+        <item quantity="one">%1$d ссылка из %2$s не запустилась</item>
+        <item quantity="few">%1$d ссылки из %2$s не запустились</item>
+        <item quantity="many">%1$d ссылок из %2$s не запустилось</item>
+        <item quantity="other">%1$d ссылки из %2$s не запустились</item>
+    </plurals>
+</resources>

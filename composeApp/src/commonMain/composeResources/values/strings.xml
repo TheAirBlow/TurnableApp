@@ -1,0 +1,573 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tabs -->
+    <string name="tab_clients">Clients</string>
+    <string name="tab_services">Services</string>
+    <string name="tab_servers">Servers</string>
+    <string name="tab_providers">Providers</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Common actions -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_save">Save</string>
+    <string name="action_add">Add</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_remove">Remove</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_back">Back</string>
+    <string name="action_dismiss">Dismiss</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_reload">Reload</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_retry_now">Retry now</string>
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_restart">Restart</string>
+    <string name="action_connect">Connect</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_paste">Paste</string>
+    <string name="action_generate">Generate</string>
+    <string name="action_create">Create</string>
+    <string name="action_done">Done</string>
+    <string name="action_later">Later</string>
+    <string name="action_update">Update</string>
+    <string name="action_solve">Solve</string>
+    <string name="action_kick">Kick</string>
+    <string name="action_collect">Collect</string>
+    <string name="action_copy_label">Copy %1$s</string>
+    <string name="action_copied">%1$s copied</string>
+
+    <!-- Statuses -->
+    <string name="status_connected">Connected</string>
+    <string name="status_running">Running</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="status_starting">Starting</string>
+    <string name="status_failed">Failed</string>
+    <string name="status_stopped">Stopped</string>
+    <string name="status_unknown">Unknown</string>
+    <string name="status_captcha_needed">Captcha needed</string>
+    <string name="status_in_use">In use</string>
+    <string name="status_unreachable">Unreachable</string>
+    <string name="status_idle">Idle</string>
+    <string name="status_process_running">Process running</string>
+    <string name="status_process_stopped">Process stopped</string>
+
+    <!-- Connection gate -->
+    <string name="gate_connecting_to">Connecting: %1$s…</string>
+    <string name="gate_connecting">Connecting…</string>
+    <string name="gate_attempt">Attempt %1$d</string>
+    <string name="gate_cannot_reach">Cannot reach: %1$s</string>
+    <string name="gate_service_not_running">Turnable service is not running</string>
+    <string name="gate_retrying_in"> · retrying in %1$ds</string>
+    <string name="gate_services">Services</string>
+    <string name="gate_settings">Settings</string>
+    <string name="gate_setting_up">Setting up Turnable…</string>
+    <string name="gate_starting_turnable">Starting Turnable…</string>
+    <string name="gate_downloading_once">Downloading the Turnable service, this happens once.</string>
+    <string name="gate_no_service">No service connected</string>
+    <string name="gate_stopped">Turnable is stopped</string>
+    <string name="gate_pick_service">Pick or add a Turnable service to manage its servers, clients and providers.</string>
+    <string name="gate_open_services">Open services</string>
+    <string name="gate_start">Start</string>
+    <string name="gate_service_word">service</string>
+    <string name="gate_the_service_word">the service</string>
+
+    <!-- Clients -->
+    <string name="clients_title">Clients</string>
+    <string name="clients_connected_of">%1$d of %2$d connected</string>
+    <string name="clients_update_all_desc">Update all subscriptions</string>
+    <string name="clients_subscriptions_updated">Subscriptions updated</string>
+    <string name="clients_subscription_updated">%1$s updated</string>
+    <string name="clients_add">Add</string>
+    <string name="clients_menu_subscription_url">Subscription URL</string>
+    <string name="clients_menu_import">Import from clipboard</string>
+    <string name="clients_menu_manual">Manual client</string>
+    <string name="clients_empty_title">No clients yet</string>
+    <string name="clients_empty_body">Add a subscription link from your provider, or paste a turnable:// link you were given.</string>
+    <string name="clients_add_subscription">Add subscription</string>
+    <string name="clients_paste_link">Paste link</string>
+    <string name="clients_group_empty">No clients yet. Update the subscription to import its links.</string>
+    <string name="clients_could_not_add">Could not add subscription</string>
+    <string name="clients_clipboard_none">The clipboard has no turnable:// link or subscription URL</string>
+    <string name="clients_select">Select a client</string>
+    <string name="clients_logs_title">%1$s logs</string>
+    <string name="clients_other_group">Other clients</string>
+    <string name="clients_group_actions">Group actions</string>
+    <string name="clients_update_now">Update now</string>
+    <string name="clients_connect_all">Connect all</string>
+    <string name="clients_disconnect_all">Disconnect all</string>
+    <string name="clients_collapse">Collapse</string>
+    <string name="clients_expand">Expand</string>
+    <string name="clients_usage_used">%1$s used</string>
+    <string name="clients_usage_of">%1$s of %2$s</string>
+    <string name="clients_usage_expired"> · expired</string>
+    <string name="clients_usage_expires_in"> · expires in %1$s</string>
+    <string name="clients_account_page">Account page</string>
+    <string name="clients_support">Support</string>
+    <string name="clients_update_available">Turnable %1$s is available</string>
+    <string name="clients_update_body">Installing it restarts %1$s and drops its connections for a moment.</string>
+
+    <plurals name="clients_added">
+        <item quantity="one">Added %1$d client</item>
+        <item quantity="other">Added %1$d clients</item>
+    </plurals>
+
+    <plurals name="clients_group_summary">
+        <item quantity="one">%1$d client · online %2$d</item>
+        <item quantity="other">%1$d clients · online %2$d</item>
+    </plurals>
+
+    <!-- Subscriptions -->
+    <string name="subscription_remove_title">Remove %1$s?</string>
+    <string name="subscription_remove_clients">Also remove its clients (%1$d)</string>
+    <string name="subscription_add_title">Add subscription</string>
+    <string name="subscription_edit_title">Edit subscription</string>
+    <string name="subscription_url">Subscription URL</string>
+    <string name="subscription_name_optional">Name (optional)</string>
+    <string name="subscription_name_hint">Defaults to the title the panel sends</string>
+    <string name="subscription_interval">Auto-update every (hours)</string>
+    <string name="subscription_interval_hint">0 turns automatic updates off</string>
+    <string name="subscription_link_n">Link %1$d</string>
+    <string name="subscription_http_error">Subscription returned HTTP %1$d</string>
+    <string name="subscription_no_links">The subscription has no turnable:// links</string>
+
+    <!-- Instance forms -->
+    <string name="form_mode_form">Form</string>
+    <string name="form_mode_json">JSON</string>
+    <string name="form_mode_link_json">Link / JSON</string>
+    <string name="form_name">Name</string>
+    <string name="form_instance_id">Instance ID (optional)</string>
+    <string name="form_instance_id_hint">Leave empty to let the service generate one</string>
+    <string name="form_autostart">Autostart</string>
+    <string name="form_autostart_hint">Restore this instance when the service restarts</string>
+    <string name="form_still_needed">Still needed: %1$s</string>
+    <string name="form_config_accepted">The service accepts this config</string>
+    <string name="form_server_name_hint">e.g. Main relay</string>
+    <string name="form_server_new_title">New server</string>
+    <string name="form_provider_section">Provider</string>
+    <string name="form_no_provider_error">Create a provider first (Providers tab). It holds the routes and users this server serves.</string>
+    <string name="form_provider">Provider</string>
+    <string name="form_select_placeholder">Select…</string>
+    <string name="form_configuration">Configuration</string>
+    <string name="form_server_config_json">Server config JSON</string>
+    <string name="form_platform">Platform</string>
+    <string name="form_call_id">Call ID</string>
+    <string name="form_call_id_hint">Platform call or meeting ID</string>
+    <string name="form_public_ip">Public IP / host</string>
+    <string name="form_listen_address">Listen address</string>
+    <string name="form_protocol">Protocol</string>
+    <string name="form_cloak">Cloak</string>
+    <string name="form_server_key_pair">Server key pair</string>
+    <string name="form_server_key_pair_hint">Clients use the public key to encrypt the handshake.</string>
+    <string name="form_regenerate">Regenerate</string>
+    <string name="form_public_key">Public key</string>
+    <string name="form_private_key">Private key</string>
+    <string name="form_instance_section">Instance</string>
+    <string name="form_routes">Routes</string>
+    <string name="form_route_n">Route %1$d</string>
+    <string name="form_remove_route">Remove route</string>
+    <string name="form_route_id">Route ID</string>
+    <string name="form_socket">Socket</string>
+    <string name="form_transport">Transport</string>
+    <string name="form_add_route">Add route</string>
+    <string name="form_encryption">Encryption</string>
+    <string name="form_mask">Mask</string>
+
+    <string name="client_new_title">New client</string>
+    <string name="client_start_count">Start %1$d</string>
+    <string name="client_raw_label">turnable:// link or JSON</string>
+    <string name="client_raw_hint">One config per line; several lines start several clients</string>
+    <string name="client_bulk_detected">%1$d configs detected. Each client gets its own random local port and the name from its link.</string>
+    <string name="client_bulk_autostart_hint">Restore these clients when the service restarts</string>
+    <string name="client_name_hint">Defaults to the name in the config</string>
+    <string name="client_listen_address">Local listen address</string>
+    <string name="client_listen_suggested">The link suggests its own ports, which are used unless you change this</string>
+    <string name="client_listen_hint">First route listens here; further routes use the next ports</string>
+    <string name="client_new_random_port">New random port</string>
+    <string name="client_connection_type">Connection type</string>
+    <string name="client_type_direct_hint">Straight to the destination, not recommended</string>
+    <string name="client_user_uuid">User UUID</string>
+    <string name="client_gateway">Gateway (host:port)</string>
+    <string name="client_peers">Peers</string>
+    <string name="client_server_public_key">Server public key</string>
+    <string name="client_display_name">Display name (in config)</string>
+    <string name="client_mpath_mixed">mpath routes cannot be mixed with other transports in one config</string>
+    <string name="client_started_of">Started %1$d of %2$d</string>
+
+    <string name="missing_call_id">call ID</string>
+    <string name="missing_user_uuid">user UUID</string>
+    <string name="missing_gateway">gateway</string>
+    <string name="missing_peers">peers</string>
+    <string name="missing_server_public_key">server public key</string>
+    <string name="missing_route_id">route ID</string>
+    <string name="missing_public_ip">public IP</string>
+    <string name="missing_listen_address">listen address</string>
+    <string name="missing_key_pair">key pair</string>
+
+    <string name="choice_proto_dtls">Raw DTLS, simple</string>
+    <string name="choice_proto_srtp">DTLS+SRTP, looks like media</string>
+    <string name="choice_proto_none">No protocol, not recommended</string>
+    <string name="choice_transport_mpath">Multipath, recommended</string>
+    <string name="choice_transport_kcp">Reliable stream, for TCP</string>
+    <string name="choice_transport_sctp">Supported, not ideal</string>
+    <string name="choice_transport_none">UDP routes only</string>
+
+    <!-- Servers and instances -->
+    <string name="servers_title">Servers</string>
+    <string name="servers_new">New server</string>
+    <string name="servers_empty_title">No servers</string>
+    <string name="servers_empty_body">A server accepts tunnels from users of one of your providers.</string>
+    <string name="servers_select">Select a server</string>
+    <string name="instance_autostart_suffix"> · autostart</string>
+    <string name="instance_kind_client">Client</string>
+    <string name="instance_kind_server">Server</string>
+    <string name="instance_logs">Logs</string>
+    <string name="instance_from_group">From %1$s</string>
+    <string name="instance_autostart_hint">Start when the service starts</string>
+    <string name="instance_id">ID</string>
+    <string name="instance_configuration">Configuration</string>
+    <string name="instance_copy_config">Copy config</string>
+    <string name="instance_remove_title">Remove %1$s?</string>
+    <string name="instance_remove_body">It is stopped and deleted together with its saved config, so it will not come back after a restart. </string>
+    <string name="instance_remove_group_suffix">It belongs to %1$s, which brings it back on its next update. </string>
+    <string name="instance_remove_stop_hint">Use Stop to keep it listed instead.</string>
+    <string name="instance_edit_title">Edit %1$s</string>
+    <string name="instance_listen_addresses">Listen addresses</string>
+    <string name="instance_listen_error">One host:port per line</string>
+    <string name="instance_listen_hint">One per line, one per route. Changing them restarts the client</string>
+    <string name="instance_local_endpoints">Local endpoints</string>
+    <string name="instance_default_endpoint">Default (127.0.0.1, random port)</string>
+    <string name="instance_route_n">Route %1$d</string>
+    <string name="instance_endpoints_hint">Point your VPN app (e.g. WireGuard in NekoBox, MTU 1280) at these addresses.</string>
+    <string name="instance_copy_as_url">Copy as URL</string>
+    <string name="instance_copy_as_json">Copy as JSON</string>
+    <string name="instance_conversion_failed">Conversion failed</string>
+    <string name="config_url_label">Config URL</string>
+    <string name="config_json_label">Config JSON</string>
+    <string name="config_label">Config</string>
+
+    <!-- Logs -->
+    <string name="logs_lines">%1$d of %2$d lines</string>
+    <string name="logs_copy_shown">Copy shown lines</string>
+    <string name="logs_clear">Clear</string>
+    <string name="logs_jump_latest">Jump to latest</string>
+    <string name="logs_search_hint">Search messages and attributes</string>
+    <string name="logs_clear_search">Clear search</string>
+    <string name="logs_level_all">All</string>
+    <string name="logs_level_debug">Debug</string>
+    <string name="logs_level_info">Info</string>
+    <string name="logs_level_warn">Warn</string>
+    <string name="logs_level_error">Error</string>
+    <string name="logs_waiting">Waiting for logs</string>
+    <string name="logs_nothing_matches">Nothing matches</string>
+    <string name="logs_copy_label">Logs</string>
+
+    <!-- Providers -->
+    <string name="providers_title">Providers</string>
+    <string name="providers_new">New provider</string>
+    <string name="providers_empty_title">No providers</string>
+    <string name="providers_empty_body">A provider holds the routes (destinations) and users that servers accept.</string>
+    <string name="providers_select">Select a provider</string>
+    <string name="provider_new_title">New provider</string>
+    <string name="provider_name">Name</string>
+    <string name="provider_uuid_optional">UUID (optional)</string>
+    <string name="provider_uuid_hint">Generated by the service when empty</string>
+    <string name="provider_type">Type</string>
+    <string name="provider_type_raw_hint">Routes and users are stored by the service</string>
+    <string name="provider_type_json_hint">Read from a JSON file on the service host</string>
+    <string name="provider_path">File path on the service host</string>
+    <string name="provider_initial_config">Initial config JSON (optional)</string>
+    <string name="provider_initial_config_hint">Leave empty to start with no routes or users and add them afterwards</string>
+    <string name="provider_invalid_config">Invalid provider config</string>
+    <string name="provider_used_by_server">Used by a server</string>
+    <string name="provider_not_used">Not used</string>
+    <string name="provider_rename">Rename</string>
+    <string name="provider_uuid">UUID</string>
+    <string name="provider_routes_n">Routes (%1$d)</string>
+    <string name="provider_add_route">Add route</string>
+    <string name="provider_no_routes">No routes. A route is a destination users can tunnel to.</string>
+    <string name="provider_users_n">Users (%1$d)</string>
+    <string name="provider_add_user">Add user</string>
+    <string name="provider_no_users">No users. Each user gets a UUID that works like a password.</string>
+    <string name="provider_force_turn"> · force TURN</string>
+    <string name="provider_routes_prefix">Routes: %1$s</string>
+    <string name="provider_routes_none">none</string>
+    <string name="provider_share_config">Share client config</string>
+    <string name="provider_raw_config">Raw config</string>
+    <string name="provider_rename_title">Rename provider</string>
+    <string name="provider_delete_route_title">Delete route %1$s?</string>
+    <string name="provider_delete_route_body">Users lose access to this destination.</string>
+    <string name="provider_delete_user_title">Delete user?</string>
+    <string name="provider_delete_user_body">%1$s will be disconnected and cannot connect again.</string>
+    <string name="provider_delete_title">Delete %1$s?</string>
+    <string name="provider_delete_body">All of its routes and users are removed.</string>
+
+    <plurals name="provider_user_line">
+        <item quantity="one">%1$s · %2$d peer</item>
+        <item quantity="other">%1$s · %2$d peers</item>
+    </plurals>
+
+    <string name="route_add_title">Add route</string>
+    <string name="route_edit_title">Edit route</string>
+    <string name="route_id">Route ID</string>
+    <string name="route_id_hint">Same ID replaces the route</string>
+    <string name="route_display_name">Display name</string>
+    <string name="route_destination_ip">Destination IP</string>
+    <string name="route_port">Port</string>
+    <string name="route_mpath_encrypts">mpath always encrypts everything</string>
+    <string name="route_tcp_needs_transport">TCP routes need a transport (mpath or kcp)</string>
+
+    <string name="user_title">User</string>
+    <string name="user_uuid">UUID</string>
+    <string name="user_uuid_hint">Works as the password for this user</string>
+    <string name="user_force_turn">Force TURN</string>
+    <string name="user_allowed_routes">Allowed routes</string>
+    <string name="user_add_routes_first">Add routes to the provider first.</string>
+
+    <string name="share_title">Share client config</string>
+    <string name="share_start_server_error">Start a server that uses this provider first</string>
+    <string name="share_server">Server</string>
+    <string name="share_routes">Routes</string>
+    <string name="share_no_routes">This user has no allowed routes.</string>
+    <string name="share_could_not_read_config">Could not read the server config</string>
+    <string name="share_client_link_label">Client link</string>
+    <string name="share_generate_copy">Generate and copy</string>
+    <string name="share_copy_again">Copy again</string>
+
+    <!-- Server statistics -->
+    <string name="stats_unavailable">Stats unavailable: %1$s</string>
+    <string name="stats_traffic">Traffic</string>
+    <string name="stats_collect_usage">Collect usage</string>
+    <string name="stats_uploaded">Uploaded</string>
+    <string name="stats_downloaded">Downloaded</string>
+    <string name="stats_online_users">Online users</string>
+    <string name="stats_sessions">Sessions</string>
+    <string name="stats_sessions_value">%1$d · %2$d ch</string>
+    <string name="stats_uptime">Uptime</string>
+    <string name="stats_counted_hint">Counted on the server side: up is what clients sent into the tunnel.</string>
+    <string name="stats_users_n">Users (%1$d)</string>
+    <string name="stats_no_users">No user has connected since the server started.</string>
+    <string name="stats_last_seen">Last seen %1$s</string>
+    <string name="stats_no_traffic">No traffic.</string>
+    <string name="stats_live_sessions_n">Live sessions (%1$d)</string>
+    <string name="stats_nobody_connected">Nobody is connected right now.</string>
+    <string name="stats_session_line">%1$s · %2$s · %3$d ch</string>
+    <string name="stats_kick_user_title">Kick user?</string>
+    <string name="stats_kick_session_title">Kick session?</string>
+    <string name="stats_kick_user_body">Closes every tunnel of %1$s. They can reconnect unless you remove them from the provider.</string>
+    <string name="stats_kick_session_body">Closes the tunnels of this session. The client will usually reconnect.</string>
+    <string name="stats_kick_failed">Kick failed</string>
+    <string name="stats_collect_title">Collect usage?</string>
+    <string name="stats_collect_body">Returns what each user moved since the previous collect and starts counting again. Panels use this for billing; collecting here means a panel will not see this traffic.</string>
+    <string name="stats_collect_failed">Collect failed</string>
+    <string name="stats_usage_since">Usage since last collect</string>
+    <string name="stats_usage_label">↑ %1$s  ↓ %2$s</string>
+
+    <plurals name="stats_sessions_channels">
+        <item quantity="one">%1$d session · %2$d ch</item>
+        <item quantity="other">%1$d sessions · %2$d ch</item>
+    </plurals>
+
+    <plurals name="stats_closed_tunnels">
+        <item quantity="one">Closed %1$d tunnel</item>
+        <item quantity="other">Closed %1$d tunnels</item>
+    </plurals>
+
+    <!-- Services -->
+    <string name="services_title">Services</string>
+    <string name="services_add">Add service</string>
+    <string name="services_empty_title">No services yet</string>
+    <string name="services_empty_body">Run a Turnable service on this device, or connect to one running elsewhere.</string>
+    <string name="services_select">Select a service</string>
+    <string name="services_select_body">Its connection and controls will show up here.</string>
+    <string name="services_service_logs">Service logs</string>
+    <string name="service_local">Local service</string>
+    <string name="service_remote">Remote service</string>
+    <string name="service_retrying_in"> · retrying in %1$ds</string>
+    <string name="service_starting">Starting…</string>
+    <string name="service_start_connect">Start and connect</string>
+    <string name="service_details">Details</string>
+    <string name="service_version">Version</string>
+    <string name="service_custom_core">Custom core</string>
+    <string name="service_newest_installed">Newest installed</string>
+    <string name="service_captcha">Captcha</string>
+    <string name="service_captcha_always_manual">Always manual</string>
+    <string name="service_captcha_automatic">Automatic, manual when it fails</string>
+    <string name="service_socket">Socket</string>
+    <string name="service_host">Host</string>
+    <string name="service_port">Port</string>
+    <string name="service_auth_key">Auth key</string>
+    <string name="service_auth_none">None (service must allow anonymous)</string>
+    <string name="service_key">Service key</string>
+    <string name="service_key_not_pinned">Not pinned</string>
+    <string name="service_id">ID</string>
+    <string name="service_authorize_title">Authorize this app</string>
+    <string name="service_authorize_hint">Add this public key to allowed_keys in the service.json file of the service.</string>
+    <string name="service_copy_public_key">Copy public key</string>
+    <string name="service_public_key_label">Public key</string>
+    <string name="service_live_logs">Live logs</string>
+    <string name="service_remove_title">Remove %1$s?</string>
+    <string name="service_remove_local_body">The local service process will be stopped. Its saved instances stay on this device and come back if you add it again with the same ID.</string>
+    <string name="service_remove_remote_body">The service itself is not affected; only this saved connection is removed.</string>
+    <string name="service_process_output">Process output</string>
+    <string name="service_add_title">Add service</string>
+    <string name="service_edit_title">Edit service</string>
+    <string name="service_type_on_device">On this device</string>
+    <string name="service_type_remote">Remote</string>
+    <string name="service_name_hint_local">e.g. Phone tunnels</string>
+    <string name="service_name_hint_remote">e.g. Frankfurt VPS</string>
+    <string name="service_release_section">Turnable release</string>
+    <string name="service_version_field">Version</string>
+    <string name="service_latest_release">Latest release</string>
+    <string name="service_version_tag">Version tag</string>
+    <string name="service_version_tag_hint">e.g. v1.4.0</string>
+    <string name="service_reload_releases">Reload releases</string>
+    <string name="service_releases_error">Could not load releases: %1$s</string>
+    <string name="service_release_download_hint">The release is downloaded on first start. The service keeps its instances and providers on this device.</string>
+    <string name="service_min_version_hint">Releases before %1$s are not supported. A custom core binary skips that check.</string>
+    <string name="service_core_file">Core file</string>
+    <string name="service_captcha_section">Captcha</string>
+    <string name="service_force_manual">Always solve captchas manually</string>
+    <string name="service_force_manual_hint">Skips the automatic attempt for every client of this service</string>
+    <string name="service_address_section">Address</string>
+    <string name="service_host_field">Host</string>
+    <string name="service_port_field">Port</string>
+    <string name="service_auth_section">Authentication</string>
+    <string name="service_auth_hint">Needed when the service has a key pair. Generate one here, then add the public key to the allowed_keys of the service.</string>
+    <string name="service_generate_key_pair">Generate key pair</string>
+    <string name="service_client_pub_key">Client public key (base64)</string>
+    <string name="service_client_priv_key">Client private key (base64)</string>
+    <string name="service_pinned_key">Pinned service public key (optional)</string>
+    <string name="service_invalid_key">Not a valid ML-KEM-768 public key</string>
+    <string name="service_priv_key_hint">Needed to prove this app owns the public key</string>
+    <string name="service_priv_key_stays">Stays on this device</string>
+    <string name="service_pinned_key_hint">Refuses to connect to a service with a different key</string>
+    <string name="service_subtitle_local">This device · %1$s</string>
+    <string name="service_subtitle_custom_core">custom core</string>
+    <string name="service_subtitle_latest">latest release</string>
+
+    <plurals name="service_counts_servers">
+        <item quantity="one">%1$d server</item>
+        <item quantity="other">%1$d servers</item>
+    </plurals>
+    <plurals name="service_counts_clients">
+        <item quantity="one">%1$d client</item>
+        <item quantity="other">%1$d clients</item>
+    </plurals>
+    <plurals name="service_counts_providers">
+        <item quantity="one">%1$d provider</item>
+        <item quantity="other">%1$d providers</item>
+    </plurals>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_captcha">Captcha</string>
+    <string name="settings_captcha_hint">Turnable tries to solve the platform captcha on its own. When that fails it notifies you, and you solve it in a page that is filled in for you.</string>
+    <string name="settings_force_manual">Always solve captchas manually</string>
+    <string name="settings_force_manual_hint">Skips the automatic attempt. Restarts the service when changed</string>
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_advanced_mode">Advanced mode</string>
+    <string name="settings_advanced_mode_hint">Adds tabs to manage services, servers and providers. Leave it off to just use Turnable as a client</string>
+    <string name="settings_auto_update_services">Update local services automatically</string>
+    <string name="settings_auto_update_hint">Checks for new releases every few hours and asks before installing one</string>
+    <string name="settings_restore_running">Reconnect clients on launch</string>
+    <string name="settings_restore_running_hint">Starts the clients that were running when the app was closed</string>
+    <string name="settings_auto_connect">Connect on launch</string>
+    <string name="settings_auto_connect_hint">Reconnect to the last used service (and start it, if local) when the app opens</string>
+    <string name="settings_backup">Backup</string>
+    <string name="settings_backup_hint">Copies your saved services and subscriptions, including keys, to the clipboard as JSON. Keep it private.</string>
+    <string name="settings_copy_backup">Copy backup</string>
+    <string name="settings_restore_clipboard">Restore from clipboard</string>
+    <string name="settings_no_backup">The clipboard does not contain a Turnable backup</string>
+    <string name="settings_nothing_new">Nothing new to import</string>
+    <string name="settings_about">About</string>
+    <string name="settings_app_description">Tunnels traffic through platform call infrastructure.</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_service_protocol">Service protocol</string>
+    <string name="settings_user_agent">User agent</string>
+    <string name="settings_service_section">Service</string>
+    <string name="settings_release">Release</string>
+    <string name="settings_core_file">Core file</string>
+    <string name="settings_needs_min">Needs %1$s or newer.</string>
+    <string name="settings_version_checks_off">Version checks are off.</string>
+    <string name="settings_check_updates">Check for updates</string>
+    <string name="settings_checking">Checking…</string>
+    <string name="settings_logs">Logs</string>
+    <string name="settings_update_automatically">Update automatically</string>
+    <string name="settings_up_to_date">Turnable is up to date</string>
+    <string name="settings_update_available">Turnable %1$s is available</string>
+    <string name="settings_check_failed">Could not check for updates: %1$s</string>
+
+    <plurals name="settings_imported">
+        <item quantity="one">Imported %1$d service</item>
+        <item quantity="other">Imported %1$d services</item>
+    </plurals>
+
+    <!-- Core picker and downloads -->
+    <string name="core_choose_binary">Choose a Turnable binary</string>
+    <string name="core_use_custom">Use custom core…</string>
+    <string name="core_change_core">Change core…</string>
+    <string name="core_use_releases">Use releases</string>
+    <string name="download_version">Downloading %1$s</string>
+    <string name="download_of">%1$s of %2$s</string>
+    <string name="unit_mb">%1$s MB</string>
+
+    <!-- Formatting -->
+    <string name="unit_byte">%1$s B</string>
+    <string name="unit_kb">%1$s KB</string>
+    <string name="unit_gb">%1$s GB</string>
+    <string name="unit_tb">%1$s TB</string>
+    <string name="duration_days_hours">%1$dd %2$dh</string>
+    <string name="duration_hours_minutes">%1$dh %2$dm</string>
+    <string name="duration_minutes_seconds">%1$dm %2$ds</string>
+    <string name="duration_seconds">%1$ds</string>
+    <string name="time_ago">%1$s ago</string>
+    <string name="time_never">never</string>
+
+    <!-- Captcha -->
+    <string name="captcha_solve_title">Solve captcha</string>
+    <string name="captcha_wait_hint">Wait a second and solve the captcha when it appears.</string>
+    <string name="captcha_solve_in_browser">Solve it in your browser</string>
+    <string name="captcha_userscript_step1">1. Install a userscript manager such as Tampermonkey, then install the Turnable userscript.</string>
+    <string name="captcha_userscript_step2">2. Open the call page in a private window and solve the captcha. The userscript joins the call and sends the tokens back, and the link tells it which port to use.</string>
+    <string name="captcha_open_userscript">Open userscript</string>
+    <string name="captcha_open_call_page">Open call page</string>
+    <string name="captcha_copy_call_link">Copy call page link</string>
+    <string name="captcha_call_link_label">Call page link</string>
+    <string name="captcha_endpoint_failed">Cannot reach the captcha endpoint of the service. The request may have expired.</string>
+    <string name="captcha_tokens_rejected">The service did not accept the tokens. The request may have expired.</string>
+    <string name="captcha_vk_logged_in">This page is logged in to VK, which is not safe for your account. Log out in the browser you used before and retry.</string>
+
+    <!-- Desktop notifications -->
+    <string name="desktop_captcha_title">Captcha required</string>
+    <string name="desktop_captcha_message">%1$s cannot connect until you solve a captcha</string>
+    <string name="desktop_captcha_balloon">%1$s. Click to solve it.</string>
+    <string name="desktop_update_title">Update available</string>
+    <string name="desktop_update_message">Turnable %1$s is available. Open the app to update.</string>
+
+    <!-- View model messages -->
+    <string name="vm_connection_failed">Connection failed</string>
+    <string name="vm_service_gone">Service no longer exists</string>
+    <string name="vm_captcha_solved">Captcha solved, connecting…</string>
+    <string name="vm_not_connected">Not connected to a service</string>
+    <string name="vm_request_failed">Request failed</string>
+    <string name="vm_connect_first">Connect to a service first</string>
+    <string name="vm_update_failed">Update failed</string>
+    <string name="vm_could_not_start">Could not start %1$s: %2$s</string>
+    <string name="vm_core_too_old">Turnable %1$s is too old. This app needs %2$s or newer, or a custom core.</string>
+    <string name="vm_updated_to">Updated to %1$s</string>
+    <string name="vm_update_failed_detail">Update failed: %1$s</string>
+    <string name="vm_no_release">No Turnable release found</string>
+    <string name="vm_custom_core_in_use">A custom core is in use. Clear it to follow releases.</string>
+    <string name="vm_default_service_name">This device</string>
+
+    <plurals name="vm_links_failed">
+        <item quantity="one">%1$d link of %2$s failed to start</item>
+        <item quantity="other">%1$d links of %2$s failed to start</item>
+    </plurals>
+</resources>

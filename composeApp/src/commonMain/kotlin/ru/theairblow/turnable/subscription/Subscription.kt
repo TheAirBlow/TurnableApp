@@ -1,9 +1,11 @@
 package ru.theairblow.turnable.subscription
 
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.getString
 import ru.theairblow.turnable.config.percentDecode
 import ru.theairblow.turnable.service.HttpResponse
 import ru.theairblow.turnable.service.httpGet
+import turnable.composeapp.generated.resources.*
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
@@ -73,9 +75,12 @@ fun listenAddrsFor(suggested: List<Int>, basePort: Int): List<String> =
 
 suspend fun fetchSubscription(url: String): FetchedSubscription {
     val resp = httpGet(url)
-    if (resp.code !in 200..299) throw IllegalStateException("Subscription returned HTTP ${resp.code}")
-    val links = parseLinks(resp.body)
-    if (links.isEmpty()) throw IllegalStateException("The subscription has no turnable:// links")
+    if (resp.code !in 200..299) throw IllegalStateException(getString(Res.string.subscription_http_error, resp.code))
+    val links = parseLinks(resp.body).mapIndexed { i, link ->
+        if (link.name.isBlank()) SubscriptionLink(link.key, getString(Res.string.subscription_link_n, i + 1), link.url, link.suggestedPorts)
+        else link
+    }
+    if (links.isEmpty()) throw IllegalStateException(getString(Res.string.subscription_no_links))
     return FetchedSubscription(
         links, resp.encodedHeader("Profile-Title"), resp.header("Profile-Update-Interval")?.trim()?.toIntOrNull(), resp.userInfo(),
         resp.encodedHeader("Announce"), resp.header("Support-Url")?.trim()?.takeIf { it.isNotEmpty() },
@@ -99,7 +104,7 @@ internal fun parseLinks(body: String): List<SubscriptionLink> {
             val name = percentDecode(link.substringAfter('#', "")).trim()
             val base = name.ifBlank { "link-$i" }
             val n = seen.getOrElse(base) { 0 }.also { seen[base] = it + 1 }
-            SubscriptionLink(if (n == 0) base else "$base#$n", name.ifBlank { "Link ${i + 1}" }, link, suggestedPorts(link))
+            SubscriptionLink(if (n == 0) base else "$base#$n", name, link, suggestedPorts(link))
         }
 }
 

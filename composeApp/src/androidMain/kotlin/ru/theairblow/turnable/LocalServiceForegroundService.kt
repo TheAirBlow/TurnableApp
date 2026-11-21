@@ -48,11 +48,16 @@ class LocalServiceForegroundService : Service() {
 
     private fun buildNotification(status: ClientStatus) = NotificationCompat.Builder(this, AndroidNotifier.STATUS_CHANNEL)
         .setSmallIcon(R.drawable.ic_turnable_notification)
-        .setContentTitle(if (status.connected > 0) "Connected" else "Turnable")
+        .setContentTitle(
+            if (status.connected > 0) getString(R.string.notification_status_connected)
+            else getString(R.string.notification_status_app_name),
+        )
         .setContentText(
             when {
-                status.total == 0 -> "Service running, no clients yet"
-                else -> "${status.connected} of ${status.total} client${if (status.total == 1) "" else "s"} connected"
+                status.total == 0 -> getString(R.string.notification_status_running)
+                else -> resources.getQuantityString(
+                    R.plurals.notification_status_count, status.total, status.connected, status.total,
+                )
             },
         )
         .setContentIntent(
@@ -61,7 +66,7 @@ class LocalServiceForegroundService : Service() {
             }
         )
         .addAction(
-            0, "Disconnect all",
+            0, getString(R.string.notification_action_disconnect_all),
             PendingIntent.getService(
                 this, 1,
                 Intent(this, LocalServiceForegroundService::class.java).setAction(ACTION_STOP_ALL),

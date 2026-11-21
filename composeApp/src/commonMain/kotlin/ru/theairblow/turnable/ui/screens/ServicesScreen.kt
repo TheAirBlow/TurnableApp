@@ -61,6 +61,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.data.ServiceConfig
 import ru.theairblow.turnable.data.ServiceType
 import ru.theairblow.turnable.service.generateServiceKeyPair
@@ -86,6 +89,7 @@ import ru.theairblow.turnable.ui.theme.MonoFamily
 import ru.theairblow.turnable.ui.theme.TurnableTheme
 import ru.theairblow.turnable.viewmodel.AppViewModel
 import ru.theairblow.turnable.viewmodel.ConnectionState
+import turnable.composeapp.generated.resources.*
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
@@ -106,12 +110,19 @@ internal fun rememberServiceStatus(vm: AppViewModel, svc: ServiceConfig): Servic
     val starting by vm.localStarting.collectAsStateWithLifecycle()
     val active = connection.activeServiceId == svc.id
     return when {
-        svc.id in starting -> ServiceStatus(StatusKind.Pending, "Starting")
-        active && connection is ConnectionState.Connected -> ServiceStatus(StatusKind.Online, "Connected")
-        active && connection is ConnectionState.Connecting -> ServiceStatus(StatusKind.Pending, "Connecting")
-        active && connection is ConnectionState.Failed -> ServiceStatus(StatusKind.Failed, "Unreachable")
-        svc.type == ServiceType.LOCAL && svc.id in running -> ServiceStatus(StatusKind.Offline, "Running")
-        else -> ServiceStatus(StatusKind.Offline, if (svc.type == ServiceType.LOCAL) "Stopped" else "Idle")
+        svc.id in starting -> ServiceStatus(StatusKind.Pending, stringResource(Res.string.status_starting))
+        active && connection is ConnectionState.Connected ->
+            ServiceStatus(StatusKind.Online, stringResource(Res.string.status_connected))
+        active && connection is ConnectionState.Connecting ->
+            ServiceStatus(StatusKind.Pending, stringResource(Res.string.status_connecting))
+        active && connection is ConnectionState.Failed ->
+            ServiceStatus(StatusKind.Failed, stringResource(Res.string.status_unreachable))
+        svc.type == ServiceType.LOCAL && svc.id in running ->
+            ServiceStatus(StatusKind.Offline, stringResource(Res.string.status_running))
+        else -> ServiceStatus(
+            StatusKind.Offline,
+            stringResource(if (svc.type == ServiceType.LOCAL) Res.string.status_stopped else Res.string.status_idle),
+        )
     }
 }
 
@@ -149,7 +160,12 @@ fun ServicesScreen(vm: AppViewModel) {
                 onAdd = { pane = ServicePane.Add },
             )
         },
-        placeholder = { EmptyState(Icons.Default.Hub, "Select a service", "Its connection and controls will show up here.") },
+        placeholder = {
+            EmptyState(
+                Icons.Default.Hub, stringResource(Res.string.services_select),
+                stringResource(Res.string.services_select_body),
+            )
+        },
     ) { p ->
         when (p) {
             ServicePane.Add -> ServiceForm(vm, existing = null, onClose = { pane = null }) { cfg ->
@@ -169,7 +185,9 @@ fun ServicesScreen(vm: AppViewModel) {
                     onDeleted = { pane = null },
                 )
             }
-            is ServicePane.Logs -> LogsPane(vm, title = "Service logs", onBack = { pane = ServicePane.Detail(p.id) })
+            is ServicePane.Logs -> LogsPane(
+                vm, title = stringResource(Res.string.services_service_logs), onBack = { pane = ServicePane.Detail(p.id) },
+            )
         }
     }
 }
@@ -185,15 +203,18 @@ private fun ServiceList(
     onAdd: () -> Unit,
 ) {
     Scaffold(
-        topBar = { PaneTopBar("Services") },
+        topBar = { PaneTopBar(stringResource(Res.string.services_title)) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = onAdd, icon = { Icon(Icons.Default.Add, null) }, text = { Text("Add service") })
+            ExtendedFloatingActionButton(
+                onClick = onAdd, icon = { Icon(Icons.Default.Add, null) },
+                text = { Text(stringResource(Res.string.services_add)) },
+            )
         },
     ) { padding ->
         if (services.isEmpty()) {
             EmptyState(
-                Icons.Default.Hub, "No services yet",
-                "Run a Turnable service on this device, or connect to one running elsewhere.",
+                Icons.Default.Hub, stringResource(Res.string.services_empty_title),
+                stringResource(Res.string.services_empty_body),
                 Modifier.padding(padding),
             )
             return@Scaffold
@@ -207,7 +228,7 @@ private fun ServiceList(
                 val status = rememberServiceStatus(vm, svc)
                 ListCard(
                     title = svc.name,
-                    subtitle = svc.subtitle,
+                    subtitle = svc.displaySubtitle(),
                     selected = svc.id == selectedId,
                     onClick = { onOpen(svc) },
                     leading = { IconTile(if (svc.type == ServiceType.LOCAL) Icons.Default.PhoneAndroid else Icons.Default.Cloud) },
@@ -245,12 +266,15 @@ private fun ServiceDetail(
     val isStarting = svc.id in starting
     val active = connection.activeServiceId == svc.id
     val connected = active && connection is ConnectionState.Connected
+    val publicKeyLabel = stringResource(Res.string.service_public_key_label)
 
     Scaffold(
         topBar = {
-            PaneTopBar(svc.name, svc.subtitle, onBack = onBack) {
-                IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit") }
-                IconButton(onClick = { confirmDelete = true }) { Icon(Icons.Default.Delete, "Remove", tint = MaterialTheme.colorScheme.error) }
+            PaneTopBar(svc.name, svc.displaySubtitle(), onBack = onBack) {
+                IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, stringResource(Res.string.action_edit)) }
+                IconButton(onClick = { confirmDelete = true }) {
+                    Icon(Icons.Default.Delete, stringResource(Res.string.action_remove), tint = MaterialTheme.colorScheme.error)
+                }
             }
         },
     ) { padding ->
@@ -263,23 +287,34 @@ private fun ServiceDetail(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconTile(if (isLocal) Icons.Default.PhoneAndroid else Icons.Default.Cloud)
                     Column(Modifier.weight(1f).padding(start = 14.dp)) {
-                        Text(if (isLocal) "Local service" else "Remote service", style = MaterialTheme.typography.titleMedium)
                         Text(
-                            if (isLocal) (if (isRunning) "Process running" else "Process stopped") else "${svc.host}:${svc.port}",
+                            stringResource(if (isLocal) Res.string.service_local else Res.string.service_remote),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            if (isLocal) stringResource(
+                                if (isRunning) Res.string.status_process_running else Res.string.status_process_stopped,
+                            ) else "${svc.host}:${svc.port}",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     StatusBadge(status.kind, status.label)
                 }
                 val failure = (connection as? ConnectionState.Failed)?.takeIf { active }
-                if (failure != null) ErrorBanner(failure.message + (failure.retryInSec?.let { " · retrying in ${it}s" } ?: ""))
+                if (failure != null) ErrorBanner(
+                    failure.message + (failure.retryInSec?.let { stringResource(Res.string.service_retrying_in, it) } ?: ""),
+                )
                 if (connected) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         val servers = instances.count { !it.isClient }
                         val clients = instances.count { it.isClient }
+                        val counts = listOf(
+                            pluralStringResource(Res.plurals.service_counts_servers, servers, servers),
+                            pluralStringResource(Res.plurals.service_counts_clients, clients, clients),
+                            pluralStringResource(Res.plurals.service_counts_providers, providers.size, providers.size),
+                        ).joinToString(" · ")
                         Text(
-                            "$servers server${if (servers == 1) "" else "s"} · $clients client${if (clients == 1) "" else "s"} · " +
-                                "${providers.size} provider${if (providers.size == 1) "" else "s"}",
+                            counts,
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -287,49 +322,78 @@ private fun ServiceDetail(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     when {
                         isStarting -> Button(onClick = {}, enabled = false, modifier = Modifier.weight(1f)) {
-                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(10.dp)); Text("Starting…")
+                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(10.dp))
+                            Text(stringResource(Res.string.service_starting))
                         }
                         isLocal && !isRunning -> Button(onClick = { vm.selectService(svc.id) }, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Start & connect")
+                            Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                            Text(stringResource(Res.string.service_start_connect))
                         }
                         connected -> OutlinedButton(onClick = vm::disconnect, modifier = Modifier.weight(1f)) {
-                            Icon(Icons.Default.LinkOff, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Disconnect")
+                            Icon(Icons.Default.LinkOff, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                            Text(stringResource(Res.string.action_disconnect))
                         }
                         else -> Button(onClick = { vm.selectService(svc.id) }, modifier = Modifier.weight(1f)) {
                             Icon(Icons.Default.Link, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
-                            Text(if (active && connection is ConnectionState.Failed) "Retry" else "Connect")
+                            Text(
+                                stringResource(
+                                    if (active && connection is ConnectionState.Failed) Res.string.action_retry
+                                    else Res.string.action_connect,
+                                ),
+                            )
                         }
                     }
                     if (isLocal && isRunning) FilledTonalButton(onClick = { vm.stopLocalService(svc.id) }) {
-                        Icon(Icons.Default.Stop, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Stop")
+                        Icon(Icons.Default.Stop, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                        Text(stringResource(Res.string.action_stop))
                     }
                 }
             }
 
-            SectionCard(title = "Details") {
+            SectionCard(title = stringResource(Res.string.service_details)) {
                 if (isLocal) {
-                    InfoRow("Version", if (svc.customCorePath.isNotBlank()) "Custom core" else svc.version.ifBlank { "Newest installed" })
-                    InfoRow("Captcha", if (svc.forceManualCaptcha) "Always manual" else "Automatic, manual when it fails")
-                    InfoRow("Socket", vm.localSocketPath(svc.id), mono = true, copyable = true)
-                } else {
-                    InfoRow("Host", svc.host)
-                    InfoRow("Port", svc.port.toString())
                     InfoRow(
-                        "Auth key", if (svc.clientPubKeyB64.isBlank()) "None (service must allow anonymous)" else svc.clientPubKeyB64.take(16) + "…",
+                        stringResource(Res.string.service_version),
+                        if (svc.customCorePath.isNotBlank()) stringResource(Res.string.service_custom_core)
+                        else svc.version.ifBlank { stringResource(Res.string.service_newest_installed) },
+                    )
+                    InfoRow(
+                        stringResource(Res.string.service_captcha),
+                        stringResource(
+                            if (svc.forceManualCaptcha) Res.string.service_captcha_always_manual
+                            else Res.string.service_captcha_automatic,
+                        ),
+                    )
+                    InfoRow(stringResource(Res.string.service_socket), vm.localSocketPath(svc.id), mono = true, copyable = true)
+                } else {
+                    InfoRow(stringResource(Res.string.service_host), svc.host)
+                    InfoRow(stringResource(Res.string.service_port), svc.port.toString())
+                    InfoRow(
+                        stringResource(Res.string.service_auth_key),
+                        if (svc.clientPubKeyB64.isBlank()) stringResource(Res.string.service_auth_none)
+                        else svc.clientPubKeyB64.take(16) + "…",
                         mono = svc.clientPubKeyB64.isNotBlank(),
                     )
-                    InfoRow("Service key", if (svc.serverPubKeyB64.isBlank()) "Not pinned" else svc.serverPubKeyB64.take(16) + "…", mono = svc.serverPubKeyB64.isNotBlank())
+                    InfoRow(
+                        stringResource(Res.string.service_key),
+                        if (svc.serverPubKeyB64.isBlank()) stringResource(Res.string.service_key_not_pinned)
+                        else svc.serverPubKeyB64.take(16) + "…",
+                        mono = svc.serverPubKeyB64.isNotBlank(),
+                    )
                 }
-                InfoRow("ID", svc.id, mono = true)
+                InfoRow(stringResource(Res.string.service_id), svc.id, mono = true)
             }
 
-            if (!isLocal && svc.clientPubKeyB64.isNotBlank()) SectionCard(title = "Authorize this app", icon = Icons.Default.Key) {
+            if (!isLocal && svc.clientPubKeyB64.isNotBlank()) SectionCard(
+                title = stringResource(Res.string.service_authorize_title), icon = Icons.Default.Key,
+            ) {
                 Text(
-                    "Add this public key to allowed_keys in the service's service.json.",
+                    stringResource(Res.string.service_authorize_hint),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                OutlinedButton(onClick = { copy(svc.clientPubKeyB64, "Public key") }) {
-                    Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Copy public key")
+                OutlinedButton(onClick = { copy(svc.clientPubKeyB64, publicKeyLabel) }) {
+                    Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                    Text(stringResource(Res.string.service_copy_public_key))
                 }
             }
 
@@ -337,7 +401,8 @@ private fun ServiceDetail(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onLogs, enabled = connected, modifier = Modifier.weight(1f)) {
-                    Icon(Icons.AutoMirrored.Filled.Article, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Live logs")
+                    Icon(Icons.AutoMirrored.Filled.Article, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                    Text(stringResource(Res.string.service_live_logs))
                 }
             }
             Spacer(Modifier.height(24.dp))
@@ -345,10 +410,11 @@ private fun ServiceDetail(
     }
 
     if (confirmDelete) ConfirmDialog(
-        title = "Remove ${svc.name}?",
-        text = if (isLocal) "The local service process will be stopped. Its saved instances stay on this device and come back if you add it again with the same ID."
-        else "The service itself is not affected; only this saved connection is removed.",
-        confirmLabel = "Remove",
+        title = stringResource(Res.string.service_remove_title, svc.name),
+        text = stringResource(
+            if (isLocal) Res.string.service_remove_local_body else Res.string.service_remove_remote_body,
+        ),
+        confirmLabel = stringResource(Res.string.action_remove),
         onConfirm = { scope.launch { vm.removeService(svc.id); onDeleted() } },
         onDismiss = { confirmDelete = false },
     )
@@ -368,9 +434,13 @@ private fun LocalOutputCard(vm: AppViewModel, id: String, running: Boolean) {
     }
     if (output.isBlank()) return
     SectionCard(
-        title = "Process output",
+        title = stringResource(Res.string.service_process_output),
         icon = Icons.Default.Terminal,
-        action = { IconButton(onClick = { refreshTick++ }, Modifier.size(32.dp)) { Icon(Icons.Default.Refresh, "Refresh", Modifier.size(18.dp)) } },
+        action = {
+            IconButton(onClick = { refreshTick++ }, Modifier.size(32.dp)) {
+                Icon(Icons.Default.Refresh, stringResource(Res.string.action_refresh), Modifier.size(18.dp))
+            }
+        },
     ) {
         val colors = TurnableTheme.status
         androidx.compose.material3.Surface(color = colors.logBackground, shape = MaterialTheme.shapes.medium) {
@@ -406,6 +476,7 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
     var loadingVersions by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val copy = rememberCopier()
+    val publicKeyLabel = stringResource(Res.string.service_public_key_label)
 
     fun loadVersions() = scope.launch {
         loadingVersions = true
@@ -414,7 +485,7 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
                 versions = list; versionsError = null
                 if (version.isBlank()) list.firstOrNull()?.let { version = it }
             }
-            .onFailure { versionsError = "Couldn't load releases: ${it.message}" }
+            .onFailure { versionsError = getString(Res.string.service_releases_error, it.message.orEmpty()) }
         loadingVersions = false
     }
     LaunchedEffect(type) { if (type == ServiceType.LOCAL && versions.isEmpty()) loadVersions() }
@@ -430,7 +501,10 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
 
     Scaffold(
         topBar = {
-            PaneTopBar(if (existing == null) "Add service" else "Edit service", onBack = onClose) {
+            PaneTopBar(
+                stringResource(if (existing == null) Res.string.service_add_title else Res.string.service_edit_title),
+                onBack = onClose,
+            ) {
                 TextButton(enabled = canSave, onClick = {
                     val id = existing?.id ?: Random.nextLong().toULong().toString(16)
                     onSave(
@@ -442,7 +516,7 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
                             )
                         }
                     )
-                }) { Text("Save") }
+                }) { Text(stringResource(Res.string.action_save)) }
             }
         },
     ) { padding ->
@@ -453,70 +527,100 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
             if (existing == null) SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 SegmentedButton(type == ServiceType.LOCAL, { type = ServiceType.LOCAL }, SegmentedButtonDefaults.itemShape(0, 2),
                     icon = { SegmentedButtonDefaults.Icon(type == ServiceType.LOCAL) { Icon(Icons.Default.PhoneAndroid, null, Modifier.size(18.dp)) } },
-                ) { Text("On this device") }
+                ) { Text(stringResource(Res.string.service_type_on_device)) }
                 SegmentedButton(type == ServiceType.REMOTE, { type = ServiceType.REMOTE }, SegmentedButtonDefaults.itemShape(1, 2),
                     icon = { SegmentedButtonDefaults.Icon(type == ServiceType.REMOTE) { Icon(Icons.Default.Cloud, null, Modifier.size(18.dp)) } },
-                ) { Text("Remote") }
+                ) { Text(stringResource(Res.string.service_type_remote)) }
             }
-            TextInput(name, { name = it }, "Name", supporting = if (type == ServiceType.LOCAL) "e.g. Phone tunnels" else "e.g. Frankfurt VPS")
+            TextInput(
+                name, { name = it }, stringResource(Res.string.form_name),
+                supporting = stringResource(
+                    if (type == ServiceType.LOCAL) Res.string.service_name_hint_local else Res.string.service_name_hint_remote,
+                ),
+            )
 
             if (type == ServiceType.LOCAL) {
-                FormSection("Turnable release")
+                FormSection(stringResource(Res.string.service_release_section))
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (versions.isNotEmpty()) {
-                        DropdownField("Version", version, versions, { version = it }, Modifier.weight(1f),
-                            hint = { if (it == versions.first()) "Latest release" else null })
+                        DropdownField(
+                            stringResource(Res.string.service_version_field), version, versions, { version = it }, Modifier.weight(1f),
+                            hint = { if (it == versions.first()) stringResource(Res.string.service_latest_release) else null },
+                        )
                     } else {
-                        TextInput(version, { version = it }, "Version tag", Modifier.weight(1f), mono = true, supporting = "e.g. v1.4.0")
+                        TextInput(
+                            version, { version = it }, stringResource(Res.string.service_version_tag),
+                            Modifier.weight(1f), mono = true, supporting = stringResource(Res.string.service_version_tag_hint),
+                        )
                     }
                     if (loadingVersions) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
-                    else IconButton(onClick = { loadVersions() }) { Icon(Icons.Default.Refresh, "Reload releases") }
+                    else IconButton(onClick = { loadVersions() }) {
+                        Icon(Icons.Default.Refresh, stringResource(Res.string.service_reload_releases))
+                    }
                 }
                 versionsError?.let { ErrorBanner(it) { versionsError = null } }
                 Text(
-                    "The release is downloaded on first start. The service keeps its instances and providers on this device.",
+                    stringResource(Res.string.service_release_download_hint),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    "Releases before $MIN_CORE_VERSION aren't supported. A custom core binary skips that check.",
+                    stringResource(Res.string.service_min_version_hint, MIN_CORE_VERSION),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (customCore.isNotBlank()) InfoRow("Core file", customCore, mono = true)
+                if (customCore.isNotBlank()) InfoRow(stringResource(Res.string.service_core_file), customCore, mono = true)
                 CustomCoreRow(existing?.id ?: "new", customCore, { customCore = it })
-                FormSection("Captcha")
+                FormSection(stringResource(Res.string.service_captcha_section))
                 SwitchRow(
-                    "Always solve captchas manually", forceManual, { forceManual = it },
-                    "Skips the automatic attempt for every client of this service",
+                    stringResource(Res.string.service_force_manual), forceManual, { forceManual = it },
+                    stringResource(Res.string.service_force_manual_hint),
                 )
             } else {
-                FormSection("Address")
+                FormSection(stringResource(Res.string.service_address_section))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextInput(host, { host = it.trim() }, "Host", Modifier.weight(0.68f))
-                    TextInput(port, { port = it.filter(Char::isDigit).take(5) }, "Port", Modifier.weight(0.32f), numeric = true,
-                        isError = port.isNotEmpty() && (portValue == null || portValue !in 1..65535))
+                    TextInput(host, { host = it.trim() }, stringResource(Res.string.service_host_field), Modifier.weight(0.68f))
+                    TextInput(
+                        port, { port = it.filter(Char::isDigit).take(5) }, stringResource(Res.string.service_port_field),
+                        Modifier.weight(0.32f), numeric = true,
+                        isError = port.isNotEmpty() && (portValue == null || portValue !in 1..65535),
+                    )
                 }
-                FormSection("Authentication")
+                FormSection(stringResource(Res.string.service_auth_section))
                 Text(
-                    "Needed when the service has a key pair. Generate one here, then add the public key to the service's allowed_keys.",
+                    stringResource(Res.string.service_auth_hint),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilledTonalButton(onClick = {
                         val (pub, priv) = generateServiceKeyPair()
                         pubKey = Base64.encode(pub); privKey = Base64.encode(priv)
-                    }) { Icon(Icons.Default.Key, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Generate key pair") }
+                    }) {
+                        Icon(Icons.Default.Key, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                        Text(stringResource(Res.string.service_generate_key_pair))
+                    }
                     AnimatedVisibility(pubKey.isNotBlank() && keyValid) {
-                        OutlinedButton(onClick = { copy(pubKey.trim(), "Public key") }) {
-                            Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Copy public key")
+                        OutlinedButton(onClick = { copy(pubKey.trim(), publicKeyLabel) }) {
+                            Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                            Text(stringResource(Res.string.service_copy_public_key))
                         }
                     }
                 }
-                TextInput(pubKey, { pubKey = it }, "Client public key (base64)", mono = true, singleLine = false,
-                    isError = !keyValid, supporting = if (!keyValid) "Not a valid ML-KEM-768 public key" else null)
-                TextInput(privKey, { privKey = it }, "Client private key (base64)", mono = true, singleLine = false,
-                    isError = !privKeyValid, supporting = if (!privKeyValid) "Needed to prove this app owns the public key" else "Stays on this device")
-                TextInput(serverKey, { serverKey = it }, "Pinned service public key (optional)", mono = true, singleLine = false,
-                    isError = !serverKeyValid, supporting = if (!serverKeyValid) "Not a valid ML-KEM-768 public key" else "Refuses to connect to a service with a different key")
+                TextInput(
+                    pubKey, { pubKey = it }, stringResource(Res.string.service_client_pub_key),
+                    mono = true, singleLine = false, isError = !keyValid,
+                    supporting = if (!keyValid) stringResource(Res.string.service_invalid_key) else null,
+                )
+                TextInput(
+                    privKey, { privKey = it }, stringResource(Res.string.service_client_priv_key),
+                    mono = true, singleLine = false, isError = !privKeyValid,
+                    supporting = if (!privKeyValid) stringResource(Res.string.service_priv_key_hint)
+                    else stringResource(Res.string.service_priv_key_stays),
+                )
+                TextInput(
+                    serverKey, { serverKey = it }, stringResource(Res.string.service_pinned_key),
+                    mono = true, singleLine = false, isError = !serverKeyValid,
+                    supporting = if (!serverKeyValid) stringResource(Res.string.service_invalid_key)
+                    else stringResource(Res.string.service_pinned_key_hint),
+                )
             }
             Spacer(Modifier.height(24.dp))
         }

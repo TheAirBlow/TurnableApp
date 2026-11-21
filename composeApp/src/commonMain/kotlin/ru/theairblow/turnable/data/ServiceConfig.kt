@@ -31,13 +31,7 @@ data class ServiceConfig(
     val customCorePath: String = "",
     /** Skips automatic captcha solving, so every connection asks for a manual solve. */
     val forceManualCaptcha: Boolean = false,
-) {
-    val subtitle: String
-        get() = when (type) {
-            ServiceType.LOCAL -> "This device · " + if (customCorePath.isNotBlank()) "custom core" else version.ifBlank { "latest release" }
-            ServiceType.REMOTE -> "$host:$port"
-        }
-}
+)
 
 /** The on-device service that simple mode runs; created on first launch. */
 const val DEFAULT_SERVICE_ID = "local"

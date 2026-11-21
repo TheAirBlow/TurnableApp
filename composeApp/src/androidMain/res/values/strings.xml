@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_status_name">Connection status</string>
+    <string name="notification_channel_status_desc">Shows while the Turnable service is running</string>
+    <string name="notification_channel_captcha_name">Captcha required</string>
+    <string name="notification_channel_captcha_desc">A connection cannot continue until you solve a captcha</string>
+    <string name="notification_channel_update_name">Updates</string>
+    <string name="notification_channel_update_desc">A new Turnable release can be installed</string>
+
+    <string name="notification_captcha_title">Captcha required</string>
+    <string name="notification_captcha_text">%1$s cannot connect until you solve it</string>
+    <string name="notification_captcha_big">%1$s cannot connect until you solve a captcha. Tap to solve it.</string>
+
+    <string name="notification_update_title">Turnable %1$s is available</string>
+    <string name="notification_update_text">Installing it restarts %1$s for a moment</string>
+    <string name="notification_action_update">Update</string>
+    <string name="notification_action_later">Later</string>
+
+    <string name="notification_status_app_name">Turnable</string>
+    <string name="notification_status_connected">Connected</string>
+    <string name="notification_status_running">Service running, no clients yet</string>
+    <string name="notification_action_disconnect_all">Disconnect all</string>
+
+    <plurals name="notification_status_count">
+        <item quantity="one">%1$d of %2$d client connected</item>
+        <item quantity="other">%1$d of %2$d clients connected</item>
+    </plurals>
+</resources>

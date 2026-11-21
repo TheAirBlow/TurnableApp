@@ -10,8 +10,15 @@ import java.awt.geom.Ellipse2D
 import java.awt.geom.Path2D
 import java.awt.geom.RoundRectangle2D
 import java.awt.image.BufferedImage
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
+import turnable.composeapp.generated.resources.*
 
 private const val TITLE = "Turnable"
+
+private fun text(resource: StringResource, vararg args: Any): String =
+    runBlocking { getString(resource, *args) }
 
 /**
  * Tray icon with balloon notifications. Where the desktop has no system tray (some Linux setups),
@@ -36,20 +43,26 @@ class DesktopNotifier : PlatformNotifier {
     }
 
     override fun status(connected: Int, total: Int) {
-        tray?.toolTip = if (total == 0) TITLE else "$TITLE: $connected of $total connected"
+        tray?.toolTip = if (total == 0) TITLE
+        else "$TITLE: " + text(Res.string.clients_connected_of, connected, total)
     }
 
     override fun captchaRequired(request: CaptchaRequest) {
         lastCaptcha = request.instanceId
-        val message = "${request.name} can't connect until you solve a captcha"
-        if (tray != null) tray.displayMessage("Captcha required", "$message. Click to solve it.", TrayIcon.MessageType.WARNING)
-        else runCatching { ProcessBuilder("notify-send", "-u", "critical", "-a", TITLE, "Captcha required", message).start() }
+        val title = text(Res.string.desktop_captcha_title)
+        val message = text(Res.string.desktop_captcha_message, request.name)
+        if (tray != null) {
+            tray.displayMessage(title, text(Res.string.desktop_captcha_balloon, message), TrayIcon.MessageType.WARNING)
+        } else runCatching {
+            ProcessBuilder("notify-send", "-u", "critical", "-a", TITLE, title, message).start()
+        }
     }
 
     override fun updateAvailable(update: CoreUpdate) {
-        val message = "Turnable ${update.version} is available. Open the app to update."
-        if (tray != null) tray.displayMessage("Update available", message, TrayIcon.MessageType.INFO)
-        else runCatching { ProcessBuilder("notify-send", "-a", TITLE, "Update available", message).start() }
+        val title = text(Res.string.desktop_update_title)
+        val message = text(Res.string.desktop_update_message, update.version)
+        if (tray != null) tray.displayMessage(title, message, TrayIcon.MessageType.INFO)
+        else runCatching { ProcessBuilder("notify-send", "-a", TITLE, title, message).start() }
     }
 
     override fun captchaCleared(instanceId: String) {

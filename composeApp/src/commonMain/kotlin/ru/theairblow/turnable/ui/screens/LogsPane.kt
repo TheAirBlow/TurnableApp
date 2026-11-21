@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.ui.util.PlatformBackHandler
 import ru.theairblow.turnable.ui.components.EmptyState
 import ru.theairblow.turnable.ui.components.PaneTopBar
@@ -56,18 +58,22 @@ import ru.theairblow.turnable.ui.theme.TurnableTheme
 import ru.theairblow.turnable.ui.util.formatClock
 import ru.theairblow.turnable.viewmodel.AppViewModel
 import ru.theairblow.turnable.viewmodel.LogEntry
+import turnable.composeapp.generated.resources.*
 
 /** slog levels: debug -4, info 0, warn 4, error 8. */
-private enum class LogLevel(val label: String, val min: Int) {
-    DEBUG("Debug", Int.MIN_VALUE), INFO("Info", 0), WARN("Warn", 4), ERROR("Error", 8);
+private enum class LogLevel(val label: StringResource, val min: Int) {
+    DEBUG(Res.string.logs_level_debug, Int.MIN_VALUE),
+    INFO(Res.string.logs_level_info, 0),
+    WARN(Res.string.logs_level_warn, 4),
+    ERROR(Res.string.logs_level_error, 8);
 
     companion object {
         fun of(level: Int) = entries.last { level >= it.min }
     }
 }
 
-private fun LogEntry.toPlainLine(): String =
-    "${formatClock(timeNs)} ${LogLevel.of(level).label.uppercase()} $message" +
+private fun LogEntry.toPlainLine(levelName: (LogLevel) -> String): String =
+    "${formatClock(timeNs)} ${levelName(LogLevel.of(level)).uppercase()} $message" +
         attrs.joinToString("") { " ${it.key}=${it.value}" }
 
 /**
@@ -81,6 +87,8 @@ fun LogsPane(vm: AppViewModel, title: String, onBack: () -> Unit, instanceId: St
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val copy = rememberCopier()
+    val levelNames = LogLevel.entries.associateWith { stringResource(it.label) }
+    val copyLabel = stringResource(Res.string.logs_copy_label)
     PlatformBackHandler(onBack = onBack)
 
     val shown = remember(logs, query, minLevel, instanceId) {
@@ -103,25 +111,36 @@ fun LogsPane(vm: AppViewModel, title: String, onBack: () -> Unit, instanceId: St
 
     Scaffold(
         topBar = {
-            PaneTopBar(title, "${shown.size} of ${logs.size} lines", onBack = onBack) {
-                IconButton(onClick = { copy(shown.joinToString("\n") { it.toPlainLine() }, "Logs") }, enabled = shown.isNotEmpty()) {
-                    Icon(Icons.Default.ContentCopy, "Copy shown lines")
+            PaneTopBar(title, stringResource(Res.string.logs_lines, shown.size, logs.size), onBack = onBack) {
+                IconButton(onClick = {
+                    copy(
+                        shown.joinToString("\n") { it.toPlainLine { level -> levelNames.getValue(level) } },
+                        copyLabel,
+                    )
+                }, enabled = shown.isNotEmpty()) {
+                    Icon(Icons.Default.ContentCopy, stringResource(Res.string.logs_copy_shown))
                 }
-                IconButton(onClick = vm::clearLogs, enabled = logs.isNotEmpty()) { Icon(Icons.Default.DeleteSweep, "Clear") }
+                IconButton(onClick = vm::clearLogs, enabled = logs.isNotEmpty()) {
+                    Icon(Icons.Default.DeleteSweep, stringResource(Res.string.logs_clear))
+                }
             }
         },
         floatingActionButton = {
             if (!atBottom && shown.isNotEmpty()) SmallFloatingActionButton(onClick = { scope.launch { listState.animateScrollToItem(shown.lastIndex) } }) {
-                Icon(Icons.Default.KeyboardDoubleArrowDown, "Jump to latest")
+                Icon(Icons.Default.KeyboardDoubleArrowDown, stringResource(Res.string.logs_jump_latest))
             }
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
-                placeholder = { Text("Search messages and attributes") },
+                placeholder = { Text(stringResource(Res.string.logs_search_hint)) },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
-                trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Default.Clear, "Clear search") } },
+                trailingIcon = {
+                    if (query.isNotEmpty()) IconButton(onClick = { query = "" }) {
+                        Icon(Icons.Default.Clear, stringResource(Res.string.logs_clear_search))
+                    }
+                },
                 singleLine = true,
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
@@ -133,7 +152,12 @@ fun LogsPane(vm: AppViewModel, title: String, onBack: () -> Unit, instanceId: St
                 LogLevel.entries.forEach { level ->
                     FilterChip(
                         selected = minLevel == level, onClick = { minLevel = level },
-                        label = { Text(if (level == LogLevel.DEBUG) "All" else "${level.label}+") },
+                        label = {
+                            Text(
+                                if (level == LogLevel.DEBUG) stringResource(Res.string.logs_level_all)
+                                else levelNames.getValue(level).uppercase() + "+",
+                            )
+                        },
                     )
                 }
             }
@@ -143,7 +167,10 @@ fun LogsPane(vm: AppViewModel, title: String, onBack: () -> Unit, instanceId: St
                     .background(colors.logBackground, MaterialTheme.shapes.large),
             ) {
                 if (shown.isEmpty()) {
-                    EmptyState(Icons.AutoMirrored.Filled.Article, if (logs.isEmpty()) "Waiting for logs" else "Nothing matches")
+                    EmptyState(
+                        Icons.AutoMirrored.Filled.Article,
+                        stringResource(if (logs.isEmpty()) Res.string.logs_waiting else Res.string.logs_nothing_matches),
+                    )
                 } else {
                     SelectionContainer {
                         LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(12.dp)) {
@@ -166,10 +193,11 @@ private fun LogLine(entry: LogEntry) {
         LogLevel.WARN -> c.logWarn
         LogLevel.ERROR -> c.logError
     }
-    val text = remember(entry) {
+    val levelName = stringResource(level.label)
+    val text = remember(entry, levelColor, levelName) {
         buildAnnotatedString {
             withStyle(SpanStyle(color = c.logMuted)) { append(formatClock(entry.timeNs)); append("  ") }
-            withStyle(SpanStyle(color = levelColor)) { append(level.label.uppercase().padEnd(5)); append(" ") }
+            withStyle(SpanStyle(color = levelColor)) { append(levelName.uppercase().padEnd(5)); append(" ") }
             withStyle(SpanStyle(color = c.logText)) { append(entry.message) }
             entry.attrs.forEach { a ->
                 withStyle(SpanStyle(color = c.logMuted)) { append("  ${a.key}=") }

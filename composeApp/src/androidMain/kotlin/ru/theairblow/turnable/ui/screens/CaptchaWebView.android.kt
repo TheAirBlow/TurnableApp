@@ -33,10 +33,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.platform.CAPTCHA_CAPTURE_SCRIPT
 import ru.theairblow.turnable.platform.CaptchaRequest
 import ru.theairblow.turnable.service.httpGet
 import ru.theairblow.turnable.ui.components.ErrorBanner
+import turnable.composeapp.generated.resources.*
 import java.net.URLEncoder
 
 private const val BRIDGE = "TurnableCaptcha"
@@ -82,11 +84,14 @@ actual fun CaptchaWebView(request: CaptchaRequest, onSolved: () -> Unit, modifie
     var error by remember { mutableStateOf<String?>(null) }
     val solved by rememberUpdatedState(onSolved)
     val scope = rememberCoroutineScope()
+    val endpointFailed = stringResource(Res.string.captcha_endpoint_failed)
+    val tokensRejected = stringResource(Res.string.captcha_tokens_rejected)
+    val vkLoggedIn = stringResource(Res.string.captcha_vk_logged_in)
 
     // Keep the service's deadline from running out while the page loads
     LaunchedEffect(request.port) {
         runCatching { withContext(Dispatchers.IO) { httpGet("http://127.0.0.1:${request.port}/ping") } }
-            .onFailure { error = "Can't reach the service's captcha endpoint. The request may have expired." }
+            .onFailure { error = endpointFailed }
     }
 
     Box(modifier) {
@@ -113,8 +118,8 @@ actual fun CaptchaWebView(request: CaptchaRequest, onSolved: () -> Unit, modifie
                     addJavascriptInterface(
                         CaptchaBridge(
                             scope, request.port,
-                            onTokens = { ok -> if (ok) solved() else error = "The service didn't accept the tokens. The request may have expired." },
-                            onLoggedIn = { error = "This page is logged in to VK, which isn't safe for your account. Log out in the browser you used before and retry." },
+                            onTokens = { ok -> if (ok) solved() else error = tokensRejected },
+                            onLoggedIn = { error = vkLoggedIn },
                         ),
                         BRIDGE,
                     )

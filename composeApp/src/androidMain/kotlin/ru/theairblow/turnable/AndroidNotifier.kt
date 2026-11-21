@@ -37,16 +37,22 @@ class AndroidNotifier(private val context: Context) : PlatformNotifier {
     init {
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_STATUS, "Connection status", NotificationManager.IMPORTANCE_LOW)
-                .apply { description = "Shows while the Turnable service is running" },
+            NotificationChannel(
+                CHANNEL_STATUS, context.getString(R.string.notification_channel_status_name),
+                NotificationManager.IMPORTANCE_LOW,
+            ).apply { description = context.getString(R.string.notification_channel_status_desc) },
         )
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_CAPTCHA, "Captcha required", NotificationManager.IMPORTANCE_HIGH)
-                .apply { description = "A connection can't continue until you solve a captcha" },
+            NotificationChannel(
+                CHANNEL_CAPTCHA, context.getString(R.string.notification_channel_captcha_name),
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply { description = context.getString(R.string.notification_channel_captcha_desc) },
         )
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_UPDATE, "Updates", NotificationManager.IMPORTANCE_DEFAULT)
-                .apply { description = "A new Turnable release can be installed" },
+            NotificationChannel(
+                CHANNEL_UPDATE, context.getString(R.string.notification_channel_update_name),
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply { description = context.getString(R.string.notification_channel_update_desc) },
         )
     }
 
@@ -64,9 +70,12 @@ class AndroidNotifier(private val context: Context) : PlatformNotifier {
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_CAPTCHA)
             .setSmallIcon(R.drawable.ic_turnable_notification)
-            .setContentTitle("Captcha required")
-            .setContentText("${request.name} can't connect until you solve it")
-            .setStyle(NotificationCompat.BigTextStyle().bigText("${request.name} can't connect until you solve a captcha. Tap to solve it."))
+            .setContentTitle(context.getString(R.string.notification_captcha_title))
+            .setContentText(context.getString(R.string.notification_captcha_text, request.name))
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(context.getString(R.string.notification_captcha_big, request.name)),
+            )
             .setCategory(NotificationCompat.CATEGORY_ERROR)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(tap)
@@ -87,11 +96,11 @@ class AndroidNotifier(private val context: Context) : PlatformNotifier {
             ?.let { PendingIntent.getActivity(context, UPDATE_NOTIFICATION_ID, it, PendingIntent.FLAG_IMMUTABLE) }
         val notification = NotificationCompat.Builder(context, CHANNEL_UPDATE)
             .setSmallIcon(R.drawable.ic_turnable_notification)
-            .setContentTitle("Turnable ${update.version} is available")
-            .setContentText("Installing it restarts ${update.serviceName} for a moment")
+            .setContentTitle(context.getString(R.string.notification_update_title, update.version))
+            .setContentText(context.getString(R.string.notification_update_text, update.serviceName))
             .setContentIntent(open)
-            .addAction(0, "Update", answer(UpdateActionReceiver.ACTION_UPDATE))
-            .addAction(0, "Later", answer(UpdateActionReceiver.ACTION_LATER))
+            .addAction(0, context.getString(R.string.notification_action_update), answer(UpdateActionReceiver.ACTION_UPDATE))
+            .addAction(0, context.getString(R.string.notification_action_later), answer(UpdateActionReceiver.ACTION_LATER))
             .setAutoCancel(true)
             .setOnlyAlertOnce(true)
             .build()

@@ -74,9 +74,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.ui.theme.MonoFamily
 import ru.theairblow.turnable.ui.theme.TurnableTheme
 import ru.theairblow.turnable.ui.util.PlatformBackHandler
+import turnable.composeapp.generated.resources.*
 
 /** Shows a transient message (snackbar). Provided by the app root. */
 val LocalNotifier = staticCompositionLocalOf<(String) -> Unit> { {} }
@@ -87,8 +89,9 @@ val LocalNotifier = staticCompositionLocalOf<(String) -> Unit> { {} }
 fun rememberCopier(): (text: String, what: String) -> Unit {
     val clipboard = LocalClipboardManager.current
     val notify = LocalNotifier.current
-    return remember(clipboard, notify) {
-        { text, what -> clipboard.setText(AnnotatedString(text)); notify("$what copied") }
+    val copied = stringResource(Res.string.action_copied)
+    return remember(clipboard, notify, copied) {
+        { text, what -> clipboard.setText(AnnotatedString(text)); notify(copied.replace("%1\$s", what)) }
     }
 }
 
@@ -169,7 +172,7 @@ fun PaneTopBar(
                 }
             },
             navigationIcon = {
-                if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                if (onBack != null) IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.action_back)) }
             },
             actions = actions,
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -325,7 +328,9 @@ fun ErrorBanner(message: String, modifier: Modifier = Modifier, onDismiss: (() -
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(Icons.Default.ErrorOutline, null, tint = MaterialTheme.colorScheme.error)
             Text(message, Modifier.weight(1f), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
-            if (onDismiss != null) IconButton(onClick = onDismiss, Modifier.size(28.dp)) { Icon(Icons.Default.Close, "Dismiss", Modifier.size(18.dp)) }
+            if (onDismiss != null) IconButton(onClick = onDismiss, Modifier.size(28.dp)) {
+                Icon(Icons.Default.Close, stringResource(Res.string.action_dismiss), Modifier.size(18.dp))
+            }
         }
     }
 }
@@ -341,7 +346,10 @@ fun InfoRow(label: String, value: String, mono: Boolean = false, copyable: Boole
             modifier = Modifier.weight(0.62f), maxLines = 2, overflow = TextOverflow.Ellipsis,
         )
         if (copyable) IconButton(onClick = { copy(value, label) }, Modifier.size(32.dp)) {
-            Icon(Icons.Default.ContentCopy, "Copy $label", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(
+                Icons.Default.ContentCopy, stringResource(Res.string.action_copy_label, label),
+                Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -381,7 +389,7 @@ fun ConfirmDialog(
                 ) else ButtonDefaults.buttonColors(),
             ) { Text(confirmLabel) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -426,7 +434,7 @@ fun <T> DropdownField(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     describe: (T) -> String = { it.toString() },
-    hint: (T) -> String? = { null },
+    hint: @Composable (T) -> String? = { null },
 ) {
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {

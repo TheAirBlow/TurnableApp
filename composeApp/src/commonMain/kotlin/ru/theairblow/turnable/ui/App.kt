@@ -51,6 +51,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.data.ThemeMode
 import ru.theairblow.turnable.ui.components.LocalNotifier
 import ru.theairblow.turnable.ui.screens.CaptchaScreen
@@ -63,13 +65,14 @@ import ru.theairblow.turnable.ui.screens.ServicesScreen
 import ru.theairblow.turnable.ui.screens.SettingsScreen
 import ru.theairblow.turnable.ui.theme.TurnableTheme
 import ru.theairblow.turnable.viewmodel.AppViewModel
+import turnable.composeapp.generated.resources.*
 
-enum class AppTab(val label: String, val icon: ImageVector, val selectedIcon: ImageVector, val advancedOnly: Boolean = false) {
-    CLIENTS("Clients", Icons.Outlined.SettingsEthernet, Icons.Filled.SettingsEthernet),
-    SERVICES("Services", Icons.Outlined.Hub, Icons.Filled.Hub, advancedOnly = true),
-    SERVERS("Servers", Icons.Outlined.Dns, Icons.Filled.Dns, advancedOnly = true),
-    PROVIDERS("Providers", Icons.Outlined.Inventory2, Icons.Filled.Inventory2, advancedOnly = true),
-    SETTINGS("Settings", Icons.Outlined.Settings, Icons.Filled.Settings),
+enum class AppTab(val label: StringResource, val icon: ImageVector, val selectedIcon: ImageVector, val advancedOnly: Boolean = false) {
+    CLIENTS(Res.string.tab_clients, Icons.Outlined.SettingsEthernet, Icons.Filled.SettingsEthernet),
+    SERVICES(Res.string.tab_services, Icons.Outlined.Hub, Icons.Filled.Hub, advancedOnly = true),
+    SERVERS(Res.string.tab_servers, Icons.Outlined.Dns, Icons.Filled.Dns, advancedOnly = true),
+    PROVIDERS(Res.string.tab_providers, Icons.Outlined.Inventory2, Icons.Filled.Inventory2, advancedOnly = true),
+    SETTINGS(Res.string.tab_settings, Icons.Outlined.Settings, Icons.Filled.Settings),
 }
 
 @Composable
@@ -111,7 +114,7 @@ fun App(viewModel: AppViewModel) {
                                     NavigationRailItem(
                                         selected = tab == t, onClick = { selected = t },
                                         icon = { Icon(if (tab == t) t.selectedIcon else t.icon, null) },
-                                        label = { Text(t.label) },
+                                        label = { Text(stringResource(t.label)) },
                                     )
                                 }
                             }
@@ -127,7 +130,7 @@ fun App(viewModel: AppViewModel) {
                                     NavigationBarItem(
                                         selected = tab == t, onClick = { selected = t },
                                         icon = { Icon(if (tab == t) t.selectedIcon else t.icon, null) },
-                                        label = { Text(t.label, maxLines = 1) },
+                                        label = { Text(stringResource(t.label), maxLines = 1) },
                                     )
                                 }
                             }

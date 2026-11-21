@@ -89,6 +89,18 @@ If you need to change it again:
 3. Update all Kotlin `package` and `import` statements
 4. Update JVM preferences node name in `AppPreferences.jvm.kt`
 
+## Localization
+
+The UI ships in English and Russian, picked from the system language.
+
+- App strings live in [the common catalog](composeApp/src/commonMain/composeResources/values/strings.xml) with the Russian file next to it in `values-ru`.
+- Android notification channels, notification bodies and foreground service text use Android resources in [the Android catalog](composeApp/src/androidMain/res/values/strings.xml), also with a `values-ru` copy. They are separate because channels are created by the platform before Compose renders anything.
+- The launcher label is in [the app module catalog](androidApp/src/main/res/values/strings.xml).
+- Plural strings use `one`, `few`, `many` and `other` where the language needs them. Keep placeholders like `%1$s` and `%1$d` in every translation.
+- Brand names such as Turnable stay untranslated.
+
+To add a language, copy a `values-ru` directory to the matching `values-<code>` directory and translate the values. The English files are the source of truth for keys.
+
 ## Version Management
 
 Current version: **1.0** (1.0.0 in compose desktop)

@@ -54,6 +54,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.config.Choices
 import ru.theairblow.turnable.config.ConfigJson
 import ru.theairblow.turnable.config.ProviderConfig
@@ -82,8 +85,10 @@ import ru.theairblow.turnable.ui.components.SwitchRow
 import ru.theairblow.turnable.ui.components.TextInput
 import ru.theairblow.turnable.ui.components.rememberCopier
 import ru.theairblow.turnable.ui.theme.MonoFamily
+import ru.theairblow.turnable.ui.util.describeTransport
 import ru.theairblow.turnable.ui.util.shortId
 import ru.theairblow.turnable.viewmodel.AppViewModel
+import turnable.composeapp.generated.resources.*
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -108,18 +113,21 @@ fun ProvidersScreen(vm: AppViewModel, openServices: () -> Unit) {
             list = {
                 Scaffold(
                     topBar = {
-                        PaneTopBar("Providers", busy = refreshing) {
-                            IconButton(onClick = vm::refresh) { Icon(Icons.Default.Refresh, "Refresh") }
+                        PaneTopBar(stringResource(Res.string.providers_title), busy = refreshing) {
+                            IconButton(onClick = vm::refresh) { Icon(Icons.Default.Refresh, stringResource(Res.string.action_refresh)) }
                         }
                     },
                     floatingActionButton = {
-                        ExtendedFloatingActionButton(onClick = { pane = ProviderPane.Add }, icon = { Icon(Icons.Default.Add, null) }, text = { Text("New provider") })
+                        ExtendedFloatingActionButton(
+                            onClick = { pane = ProviderPane.Add }, icon = { Icon(Icons.Default.Add, null) },
+                            text = { Text(stringResource(Res.string.providers_new)) },
+                        )
                     },
                 ) { padding ->
                     if (providers.isEmpty()) {
                         EmptyState(
-                            Icons.Default.Inventory2, "No providers",
-                            "A provider holds the routes (destinations) and users that servers accept.", Modifier.padding(padding),
+                            Icons.Default.Inventory2, stringResource(Res.string.providers_empty_title),
+                            stringResource(Res.string.providers_empty_body), Modifier.padding(padding),
                         )
                         return@Scaffold
                     }
@@ -134,14 +142,16 @@ fun ProvidersScreen(vm: AppViewModel, openServices: () -> Unit) {
                                 selected = (pane as? ProviderPane.Detail)?.uuid == p.uuid,
                                 onClick = { pane = ProviderPane.Detail(p.uuid) },
                                 leading = { IconTile(Icons.Default.Inventory2) },
-                                trailing = { if (p.inUse) StatusBadge(StatusKind.Online, "In use") },
+                                trailing = {
+                                    if (p.inUse) StatusBadge(StatusKind.Online, stringResource(Res.string.status_in_use))
+                                },
                                 modifier = Modifier.animateItem(),
                             )
                         }
                     }
                 }
             },
-            placeholder = { EmptyState(Icons.Default.Inventory2, "Select a provider") },
+            placeholder = { EmptyState(Icons.Default.Inventory2, stringResource(Res.string.providers_select)) },
         ) { p ->
             when (p) {
                 ProviderPane.Add -> AddProviderPane(vm, onClose = { pane = null }, onCreated = { pane = ProviderPane.Detail(it) })
@@ -174,20 +184,20 @@ private fun AddProviderPane(vm: AppViewModel, onClose: () -> Unit, onCreated: (S
     }
 
     Scaffold(topBar = {
-        PaneTopBar("New provider", onBack = onClose, busy = submitting) {
+        PaneTopBar(stringResource(Res.string.provider_new_title), onBack = onClose, busy = submitting) {
             TextButton(enabled = name.isNotBlank() && !submitting && (type != "json" || path.isNotBlank()), onClick = {
                 scope.launch {
                     submitting = true; error = null
                     val check = vm.request { validateProviderConfig(config) }.getOrNull()
                     if (check != null && !check.valid) {
-                        error = check.error.ifBlank { "Invalid provider config" }
+                        error = check.error.ifBlank { getString(Res.string.provider_invalid_config) }
                     } else {
                         vm.request { addProvider(uuid.trim(), name.trim(), config) }
                             .onSuccess { vm.refresh(); onCreated(it) }.onFailure { error = it.message }
                     }
                     submitting = false
                 }
-            }) { Text("Create") }
+            }) { Text(stringResource(Res.string.action_create)) }
         }
     }) { padding ->
         Column(
@@ -195,14 +205,25 @@ private fun AddProviderPane(vm: AppViewModel, onClose: () -> Unit, onCreated: (S
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             error?.let { ErrorBanner(it) { error = null } }
-            TextInput(name, { name = it }, "Name")
-            TextInput(uuid, { uuid = it.trim() }, "UUID (optional)", mono = true, supporting = "Generated by the service when empty")
-            DropdownField("Type", type, listOf("raw", "json"), { type = it }, hint = {
-                if (it == "raw") "Routes and users are stored by the service" else "Read from a JSON file on the service host"
-            })
-            if (type == "json") TextInput(path, { path = it }, "File path on the service host", mono = true)
-            else TextInput(raw, { raw = it }, "Initial config JSON (optional)", mono = true, singleLine = false, minLines = 5,
-                supporting = "Leave empty to start with no routes or users and add them afterwards")
+            TextInput(name, { name = it }, stringResource(Res.string.provider_name))
+            TextInput(
+                uuid, { uuid = it.trim() }, stringResource(Res.string.provider_uuid_optional),
+                mono = true, supporting = stringResource(Res.string.provider_uuid_hint),
+            )
+            DropdownField(
+                stringResource(Res.string.provider_type), type, listOf("raw", "json"), { type = it },
+                hint = {
+                    stringResource(
+                        if (it == "raw") Res.string.provider_type_raw_hint else Res.string.provider_type_json_hint,
+                    )
+                },
+            )
+            if (type == "json") TextInput(path, { path = it }, stringResource(Res.string.provider_path), mono = true)
+            else TextInput(
+                raw, { raw = it }, stringResource(Res.string.provider_initial_config),
+                mono = true, singleLine = false, minLines = 5,
+                supporting = stringResource(Res.string.provider_initial_config_hint),
+            )
         }
     }
 }
@@ -237,11 +258,18 @@ private fun ProviderDetail(vm: AppViewModel, provider: ProviderInfo, onBack: () 
     }
 
     Scaffold(topBar = {
-        PaneTopBar(provider.name.ifBlank { provider.uuid }, if (provider.inUse) "Used by a server" else "Not used", onBack = onBack) {
-            IconButton(onClick = { reloadTick++ }) { Icon(Icons.Default.Refresh, "Reload") }
-            IconButton(onClick = { renaming = true }) { Icon(Icons.Default.Edit, "Rename") }
+        PaneTopBar(
+            provider.name.ifBlank { provider.uuid },
+            stringResource(if (provider.inUse) Res.string.provider_used_by_server else Res.string.provider_not_used),
+            onBack = onBack,
+        ) {
+            IconButton(onClick = { reloadTick++ }) { Icon(Icons.Default.Refresh, stringResource(Res.string.action_reload)) }
+            IconButton(onClick = { renaming = true }) { Icon(Icons.Default.Edit, stringResource(Res.string.provider_rename)) }
             IconButton(onClick = { confirmDelete = true }, enabled = !provider.inUse) {
-                Icon(Icons.Default.Delete, "Delete", tint = if (provider.inUse) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.error)
+                Icon(
+                    Icons.Default.Delete, stringResource(Res.string.action_delete),
+                    tint = if (provider.inUse) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.error,
+                )
             }
         }
     }) { padding ->
@@ -250,12 +278,17 @@ private fun ProviderDetail(vm: AppViewModel, provider: ProviderInfo, onBack: () 
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             error?.let { ErrorBanner(it) }
-            SectionCard { InfoRow("UUID", provider.uuid, mono = true, copyable = true) }
+            SectionCard { InfoRow(stringResource(Res.string.provider_uuid), provider.uuid, mono = true, copyable = true) }
 
-            SectionCard(title = "Routes (${routes.size})", icon = Icons.Default.AltRoute, action = {
-                IconButton(onClick = { editRoute = RouteInfo() }, Modifier.size(32.dp)) { Icon(Icons.Default.Add, "Add route") }
+            SectionCard(title = stringResource(Res.string.provider_routes_n, routes.size), icon = Icons.Default.AltRoute, action = {
+                IconButton(onClick = { editRoute = RouteInfo() }, Modifier.size(32.dp)) {
+                    Icon(Icons.Default.Add, stringResource(Res.string.provider_add_route))
+                }
             }) {
-                if (routes.isEmpty()) Text("No routes. A route is a destination users can tunnel to.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (routes.isEmpty()) Text(
+                    stringResource(Res.string.provider_no_routes),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 routes.forEachIndexed { i, r ->
                     if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     EntityRow(
@@ -266,27 +299,35 @@ private fun ProviderDetail(vm: AppViewModel, provider: ProviderInfo, onBack: () 
                 }
             }
 
-            SectionCard(title = "Users (${users.size})", icon = Icons.Default.Person, action = {
+            SectionCard(title = stringResource(Res.string.provider_users_n, users.size), icon = Icons.Default.Person, action = {
                 IconButton(onClick = { editUser = UserInfo(uuid = newUuid(), type = "relay", peers = 1) }, Modifier.size(32.dp)) {
-                    Icon(Icons.Default.PersonAdd, "Add user")
+                    Icon(Icons.Default.PersonAdd, stringResource(Res.string.provider_add_user))
                 }
             }) {
-                if (users.isEmpty()) Text("No users. Each user gets a UUID that works like a password.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (users.isEmpty()) Text(
+                    stringResource(Res.string.provider_no_users),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 users.forEachIndexed { i, u ->
                     if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    val peersLine = pluralStringResource(Res.plurals.provider_user_line, u.peers, u.type, u.peers) +
+                        if (u.forceturn) stringResource(Res.string.provider_force_turn) else ""
+                    val routeNames = u.allowedRoutes.joinToString(", ")
+                    val routesValue = if (routeNames.isEmpty()) stringResource(Res.string.provider_routes_none) else routeNames
                     EntityRow(
                         title = u.uuid, mono = true,
-                        lines = listOf(
-                            "${u.type} · ${u.peers} peer(s)" + if (u.forceturn) " · force TURN" else "",
-                            "Routes: " + u.allowedRoutes.joinToString(", ").ifEmpty { "none" },
-                        ),
+                        lines = listOf(peersLine, stringResource(Res.string.provider_routes_prefix, routesValue)),
                         onEdit = { editUser = u }, onDelete = { deleteUser = u },
-                        extra = { IconButton(onClick = { shareUser = u }) { Icon(Icons.Default.Share, "Share client config") } },
+                        extra = {
+                            IconButton(onClick = { shareUser = u }) {
+                                Icon(Icons.Default.Share, stringResource(Res.string.provider_share_config))
+                            }
+                        },
                     )
                 }
             }
 
-            if (config.isNotBlank()) SectionCard(title = "Raw config") {
+            if (config.isNotBlank()) SectionCard(title = stringResource(Res.string.provider_raw_config)) {
                 Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium) {
                     SelectionContainer {
                         Text(
@@ -318,15 +359,25 @@ private fun ProviderDetail(vm: AppViewModel, provider: ProviderInfo, onBack: () 
     }
     shareUser?.let { u -> ShareConfigDialog(vm, u, routes, onDismiss = { shareUser = null }) }
     deleteRoute?.let { r ->
-        ConfirmDialog("Delete route ${r.id}?", "Users lose access to this destination.", "Delete",
-            onConfirm = { mutate { deleteRoute(provider.uuid, r.id) } }, onDismiss = { deleteRoute = null })
+        ConfirmDialog(
+            stringResource(Res.string.provider_delete_route_title, r.id),
+            stringResource(Res.string.provider_delete_route_body),
+            stringResource(Res.string.action_delete),
+            onConfirm = { mutate { deleteRoute(provider.uuid, r.id) } }, onDismiss = { deleteRoute = null },
+        )
     }
     deleteUser?.let { u ->
-        ConfirmDialog("Delete user?", "${u.uuid} will be disconnected and can't connect again.", "Delete",
-            onConfirm = { mutate { deleteUser(provider.uuid, u.uuid) } }, onDismiss = { deleteUser = null })
+        ConfirmDialog(
+            stringResource(Res.string.provider_delete_user_title),
+            stringResource(Res.string.provider_delete_user_body, u.uuid),
+            stringResource(Res.string.action_delete),
+            onConfirm = { mutate { deleteUser(provider.uuid, u.uuid) } }, onDismiss = { deleteUser = null },
+        )
     }
     if (confirmDelete) ConfirmDialog(
-        "Delete ${provider.name}?", "All of its routes and users are removed.", "Delete",
+        stringResource(Res.string.provider_delete_title, provider.name),
+        stringResource(Res.string.provider_delete_body),
+        stringResource(Res.string.action_delete),
         onConfirm = { scope.launch { vm.mutate { deleteProvider(provider.uuid) }.onSuccess { onBack() } } },
         onDismiss = { confirmDelete = false },
     )
@@ -337,10 +388,14 @@ private fun RenameProviderDialog(current: String, onDismiss: () -> Unit, onSave:
     var name by remember { mutableStateOf(current) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Rename provider") },
-        text = { TextInput(name, { name = it }, "Name") },
-        confirmButton = { Button(enabled = name.isNotBlank() && name != current, onClick = { onSave(name.trim()) }) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        title = { Text(stringResource(Res.string.provider_rename_title)) },
+        text = { TextInput(name, { name = it }, stringResource(Res.string.provider_name)) },
+        confirmButton = {
+            Button(enabled = name.isNotBlank() && name != current, onClick = { onSave(name.trim()) }) {
+                Text(stringResource(Res.string.action_save))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -359,8 +414,10 @@ private fun EntityRow(
             lines.forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
         extra()
-        IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit") }
-        IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, "Delete", tint = MaterialTheme.colorScheme.error) }
+        IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, stringResource(Res.string.action_edit)) }
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Default.Delete, stringResource(Res.string.action_delete), tint = MaterialTheme.colorScheme.error)
+        }
     }
 }
 
@@ -374,27 +431,41 @@ private fun RouteDialog(initial: RouteInfo, isNew: Boolean, onDismiss: () -> Uni
     val tcpWithoutTransport = r.socket == "tcp" && r.transport == "none"
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (isNew) "Add route" else "Edit route") },
+        title = { Text(stringResource(if (isNew) Res.string.route_add_title else Res.string.route_edit_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextInput(r.id, { r = r.copy(id = it.trim()) }, "Route ID", mono = true, supporting = if (!isNew) "Same ID replaces the route" else null)
-                TextInput(r.name, { r = r.copy(name = it) }, "Display name")
+                TextInput(
+                    r.id, { r = r.copy(id = it.trim()) }, stringResource(Res.string.route_id), mono = true,
+                    supporting = if (!isNew) stringResource(Res.string.route_id_hint) else null,
+                )
+                TextInput(r.name, { r = r.copy(name = it) }, stringResource(Res.string.route_display_name))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextInput(r.address, { r = r.copy(address = it.trim()) }, "Destination IP", Modifier.weight(0.65f), mono = true)
-                    TextInput(port, { port = it.filter(Char::isDigit).take(5) }, "Port", Modifier.weight(0.35f), numeric = true)
+                    TextInput(
+                        r.address, { r = r.copy(address = it.trim()) }, stringResource(Res.string.route_destination_ip),
+                        Modifier.weight(0.65f), mono = true,
+                    )
+                    TextInput(
+                        port, { port = it.filter(Char::isDigit).take(5) }, stringResource(Res.string.route_port),
+                        Modifier.weight(0.35f), numeric = true,
+                    )
                 }
-                DropdownField("Socket", r.socket, Choices.sockets, { r = r.copy(socket = it) })
-                DropdownField("Transport", r.transport, Choices.transports, { r = r.copy(transport = it) }, hint = Choices::describeTransport)
-                DropdownField("Encryption", r.encryption, Choices.encryptions, { r = r.copy(encryption = it) },
-                    hint = { if (r.transport == "mpath") "mpath always encrypts everything" else null })
-                if (tcpWithoutTransport) ErrorBanner("TCP routes need a transport (mpath or kcp)")
+                DropdownField(stringResource(Res.string.form_socket), r.socket, Choices.sockets, { r = r.copy(socket = it) })
+                DropdownField(
+                    stringResource(Res.string.form_transport), r.transport, Choices.transports, { r = r.copy(transport = it) },
+                    hint = { describeTransport(it) },
+                )
+                DropdownField(
+                    stringResource(Res.string.form_encryption), r.encryption, Choices.encryptions, { r = r.copy(encryption = it) },
+                    hint = { if (r.transport == "mpath") stringResource(Res.string.route_mpath_encrypts) else null },
+                )
+                if (tcpWithoutTransport) ErrorBanner(stringResource(Res.string.route_tcp_needs_transport))
             }
         },
         confirmButton = {
             Button(enabled = r.id.isNotBlank() && r.address.isNotBlank() && portValue != null && !tcpWithoutTransport,
-                onClick = { onSave(r.copy(port = portValue ?: 0)) }) { Text("Save") }
+                onClick = { onSave(r.copy(port = portValue ?: 0)) }) { Text(stringResource(Res.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -405,18 +476,33 @@ private fun UserDialog(initial: UserInfo, routes: List<RouteInfo>, onDismiss: ()
     var peers by remember { mutableStateOf(initial.peers.coerceAtLeast(1).toString()) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("User") },
+        title = { Text(stringResource(Res.string.user_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextInput(u.uuid, { u = u.copy(uuid = it.trim()) }, "UUID", mono = true, supporting = "Acts as the user's password",
-                    trailing = { IconButton(onClick = { u = u.copy(uuid = newUuid()) }) { Icon(Icons.Default.Shuffle, "Generate") } })
+                TextInput(
+                    u.uuid, { u = u.copy(uuid = it.trim()) }, stringResource(Res.string.user_uuid),
+                    mono = true, supporting = stringResource(Res.string.user_uuid_hint),
+                    trailing = {
+                        IconButton(onClick = { u = u.copy(uuid = newUuid()) }) {
+                            Icon(Icons.Default.Shuffle, stringResource(Res.string.action_generate))
+                        }
+                    },
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DropdownField("Type", u.type.ifBlank { "relay" }, Choices.userTypes, { u = u.copy(type = it) }, Modifier.weight(0.6f))
-                    TextInput(peers, { peers = it.filter(Char::isDigit).take(3) }, "Peers", Modifier.weight(0.4f), numeric = true)
+                    DropdownField(
+                        stringResource(Res.string.provider_type), u.type.ifBlank { "relay" }, Choices.userTypes,
+                        { u = u.copy(type = it) }, Modifier.weight(0.6f),
+                    )
+                    TextInput(
+                        peers, { peers = it.filter(Char::isDigit).take(3) }, stringResource(Res.string.client_peers),
+                        Modifier.weight(0.4f), numeric = true,
+                    )
                 }
-                if (u.type == "p2p") SwitchRow("Force TURN", u.forceturn, { u = u.copy(forceturn = it) })
-                FormSection("Allowed routes")
-                if (routes.isEmpty()) Text("Add routes to the provider first.", style = MaterialTheme.typography.bodySmall)
+                if (u.type == "p2p") SwitchRow(
+                    stringResource(Res.string.user_force_turn), u.forceturn, { u = u.copy(forceturn = it) },
+                )
+                FormSection(stringResource(Res.string.user_allowed_routes))
+                if (routes.isEmpty()) Text(stringResource(Res.string.user_add_routes_first), style = MaterialTheme.typography.bodySmall)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     routes.forEach { r ->
                         val on = r.id in u.allowedRoutes
@@ -428,9 +514,11 @@ private fun UserDialog(initial: UserInfo, routes: List<RouteInfo>, onDismiss: ()
             }
         },
         confirmButton = {
-            Button(enabled = u.uuid.isNotBlank() && (peers.toIntOrNull() ?: 0) >= 1, onClick = { onSave(u.copy(peers = peers.toInt())) }) { Text("Save") }
+            Button(enabled = u.uuid.isNotBlank() && (peers.toIntOrNull() ?: 0) >= 1, onClick = { onSave(u.copy(peers = peers.toInt())) }) {
+                Text(stringResource(Res.string.action_save))
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
 }
 
@@ -447,16 +535,20 @@ private fun ShareConfigDialog(vm: AppViewModel, user: UserInfo, routes: List<Rou
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     val copy = rememberCopier()
+    val selectPlaceholder = stringResource(Res.string.form_select_placeholder)
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Share client config") },
+        title = { Text(stringResource(Res.string.share_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (servers.isEmpty()) ErrorBanner("Start a server that uses this provider first")
-                else DropdownField("Server", server, servers, { server = it; result = null }, describe = { it?.displayName ?: "Select…" })
-                FormSection("Routes")
-                if (allowed.isEmpty()) Text("This user has no allowed routes.", style = MaterialTheme.typography.bodySmall)
+                if (servers.isEmpty()) ErrorBanner(stringResource(Res.string.share_start_server_error))
+                else DropdownField(
+                    stringResource(Res.string.share_server), server, servers, { server = it; result = null },
+                    describe = { it?.displayName ?: selectPlaceholder },
+                )
+                FormSection(stringResource(Res.string.share_routes))
+                if (allowed.isEmpty()) Text(stringResource(Res.string.share_no_routes), style = MaterialTheme.typography.bodySmall)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     allowed.forEach { r ->
                         FilterChip(selected = r.id in picked, onClick = { picked = if (r.id in picked) picked - r.id else picked + r.id; result = null },
@@ -478,17 +570,24 @@ private fun ShareConfigDialog(vm: AppViewModel, user: UserInfo, routes: List<Rou
                     error = null
                     val outcome = runCatching {
                         val cfg = parseServerConfig(vm.request { getInstance(srv.id) }.getOrThrow().config)
-                            ?: error("Couldn't read the server's config")
+                            ?: error(getString(Res.string.share_could_not_read_config))
                         val json = ConfigJson.encodeToString(
                             ru.theairblow.turnable.config.ClientConfig.serializer(),
                             generateClientConfig(cfg, user, allowed.filter { it.id in picked }),
                         )
                         vm.request { convertClientConfig(json) }.getOrThrow()
                     }
-                    outcome.onSuccess { result = it; copy(it, "Client link") }.onFailure { error = it.message }
+                    outcome.onSuccess { result = it; copy(it, getString(Res.string.share_client_link_label)) }
+                        .onFailure { error = it.message }
                 }
-            }) { Text(if (result == null) "Generate & copy" else "Copy again") }
+            }) {
+                Text(
+                    stringResource(
+                        if (result == null) Res.string.share_generate_copy else Res.string.share_copy_again,
+                    ),
+                )
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_close)) } },
     )
 }

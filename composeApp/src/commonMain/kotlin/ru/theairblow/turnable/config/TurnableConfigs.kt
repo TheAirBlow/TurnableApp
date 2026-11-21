@@ -24,22 +24,10 @@ object Choices {
     val userTypes = listOf("relay", "p2p")
     val clientTypes = listOf("relay", "direct")
     val masks = listOf("on", "off")
-
-    fun describeProto(p: String) = when (p) {
-        "dtls" -> "Raw DTLS, simple"
-        "srtp" -> "DTLS+SRTP, looks like media"
-        "none" -> "No protocol, not recommended"
-        else -> null
-    }
-
-    fun describeTransport(t: String) = when (t) {
-        "mpath" -> "Multipath, recommended"
-        "kcp" -> "Reliable stream, for TCP"
-        "sctp" -> "Supported, not ideal"
-        "none" -> "UDP routes only"
-        else -> null
-    }
 }
+
+/** A required field a form still leaves empty. The UI supplies the label. */
+enum class MissingField { CALL_ID, USER_UUID, GATEWAY, PEERS, SERVER_PUBLIC_KEY, ROUTE_ID, PUBLIC_IP, LISTEN_ADDRESS, KEY_PAIR }
 
 /** Defaults are dropped from the output, except fields marked @EncodeDefault that the service needs to see. */
 val ConfigJson = Json {
@@ -193,19 +181,19 @@ fun percentDecode(s: String): String {
 }
 
 /** Required fields still empty in a client form; empty when the config can be sent for validation. */
-fun ClientConfig.missingFields(): List<String> = buildList {
-    if (callId.isBlank()) add("call ID")
-    if (userUuid.isBlank()) add("user UUID")
-    if (gateway.isBlank()) add("gateway")
-    if (peers < 1) add("peers")
-    if (type == "relay" && pubKey.isBlank()) add("server public key")
-    if (routes.isEmpty() || routes.any { it.routeId.isBlank() }) add("route ID")
+fun ClientConfig.missingFields(): List<MissingField> = buildList {
+    if (callId.isBlank()) add(MissingField.CALL_ID)
+    if (userUuid.isBlank()) add(MissingField.USER_UUID)
+    if (gateway.isBlank()) add(MissingField.GATEWAY)
+    if (peers < 1) add(MissingField.PEERS)
+    if (type == "relay" && pubKey.isBlank()) add(MissingField.SERVER_PUBLIC_KEY)
+    if (routes.isEmpty() || routes.any { it.routeId.isBlank() }) add(MissingField.ROUTE_ID)
 }
 
 /** Required fields still empty in a server form. */
-fun RelayServerConfig.missingFields(): List<String> = buildList {
-    if (callId.isBlank()) add("call ID")
-    if (publicIp.isBlank()) add("public IP")
-    if (listenAddr.isBlank()) add("listen address")
-    if (pubKey.isBlank() || privKey.isBlank()) add("key pair")
+fun RelayServerConfig.missingFields(): List<MissingField> = buildList {
+    if (callId.isBlank()) add(MissingField.CALL_ID)
+    if (publicIp.isBlank()) add(MissingField.PUBLIC_IP)
+    if (listenAddr.isBlank()) add(MissingField.LISTEN_ADDRESS)
+    if (pubKey.isBlank() || privKey.isBlank()) add(MissingField.KEY_PAIR)
 }

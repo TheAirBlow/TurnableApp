@@ -41,6 +41,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.proto.GetStatsResponse
 import ru.theairblow.turnable.proto.InstanceInfo
 import ru.theairblow.turnable.proto.SessionStats
@@ -59,10 +63,12 @@ import ru.theairblow.turnable.ui.util.formatDuration
 import ru.theairblow.turnable.ui.util.nowUnixSeconds
 import ru.theairblow.turnable.ui.util.shortId
 import ru.theairblow.turnable.viewmodel.AppViewModel
+import turnable.composeapp.generated.resources.*
 
 private const val STATS_POLL_MS = 3000L
 
-private fun Usage?.label() = "↑ ${formatBytes(this?.up ?: 0)}  ↓ ${formatBytes(this?.down ?: 0)}"
+@Composable
+private fun Usage?.label() = stringResource(Res.string.stats_usage_label, formatBytes(this?.up ?: 0), formatBytes(this?.down ?: 0))
 
 /** Live stats of a server instance: totals, users and sessions, with kick controls. Polls while shown. */
 @OptIn(ExperimentalLayoutApi::class)
@@ -94,36 +100,50 @@ fun ServerStatsSection(vm: AppViewModel, info: InstanceInfo) {
         vm.sessionEvents.filter { it.instanceId == info.id }.collect { load() }
     }
 
-    error?.let { ErrorBanner("Stats unavailable: $it") }
+    error?.let { ErrorBanner(stringResource(Res.string.stats_unavailable, it)) }
     val s = stats ?: return
     val totals = s.totals
 
-    SectionCard(title = "Traffic", icon = Icons.Default.Insights, action = {
-        IconButton(onClick = { confirmCollect = true }, Modifier.size(32.dp)) { Icon(Icons.Default.Tune, "Collect usage", Modifier.size(18.dp)) }
+    SectionCard(title = stringResource(Res.string.stats_traffic), icon = Icons.Default.Insights, action = {
+        IconButton(onClick = { confirmCollect = true }, Modifier.size(32.dp)) {
+            Icon(Icons.Default.Tune, stringResource(Res.string.stats_collect_usage), Modifier.size(18.dp))
+        }
     }) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             val tile = Modifier.widthIn(min = 132.dp).weight(1f)
-            StatTile("Uploaded", formatBytes(totals?.usage?.up ?: 0), tile, Icons.Default.ArrowUpward)
-            StatTile("Downloaded", formatBytes(totals?.usage?.down ?: 0), tile, Icons.Default.ArrowDownward)
-            StatTile("Online users", (totals?.users ?: 0).toString(), tile, Icons.Default.Group)
-            StatTile("Sessions", "${totals?.sessions ?: 0} · ${totals?.channels ?: 0} ch", tile, Icons.Default.Cable)
-            StatTile("Uptime", totals?.started?.takeIf { it > 0 }?.let { formatDuration(nowUnixSeconds() - it) } ?: "—", tile, Icons.Default.Schedule)
+            StatTile(stringResource(Res.string.stats_uploaded), formatBytes(totals?.usage?.up ?: 0), tile, Icons.Default.ArrowUpward)
+            StatTile(stringResource(Res.string.stats_downloaded), formatBytes(totals?.usage?.down ?: 0), tile, Icons.Default.ArrowDownward)
+            StatTile(stringResource(Res.string.stats_online_users), (totals?.users ?: 0).toString(), tile, Icons.Default.Group)
+            StatTile(
+                stringResource(Res.string.stats_sessions),
+                stringResource(Res.string.stats_sessions_value, totals?.sessions ?: 0, totals?.channels ?: 0),
+                tile, Icons.Default.Cable,
+            )
+            StatTile(
+                stringResource(Res.string.stats_uptime),
+                totals?.started?.takeIf { it > 0 }?.let { formatDuration(nowUnixSeconds() - it) } ?: "—",
+                tile, Icons.Default.Schedule,
+            )
         }
         Text(
-            "Counted from the server's side: up is what clients sent into the tunnel.",
+            stringResource(Res.string.stats_counted_hint),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 
-    SectionCard(title = "Users (${s.users.size})", icon = Icons.Default.Group) {
-        if (s.users.isEmpty()) Text("No user has connected since the server started.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    SectionCard(title = stringResource(Res.string.stats_users_n, s.users.size), icon = Icons.Default.Group) {
+        if (s.users.isEmpty()) Text(
+            stringResource(Res.string.stats_no_users),
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         s.users.sortedWith(compareByDescending<UserStats> { it.online }.thenByDescending { it.lastSeen }).forEachIndexed { i, u ->
             if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             StatsRow(
                 online = u.online,
                 title = u.uuid,
                 lines = listOfNotNull(
-                    if (u.online) "${u.sessions} session(s) · ${u.channels} channel(s)" else "Last seen ${formatAgo(u.lastSeen)}",
+                    if (u.online) pluralStringResource(Res.plurals.stats_sessions_channels, u.sessions, u.sessions, u.channels)
+                    else stringResource(Res.string.stats_last_seen, formatAgo(u.lastSeen)),
                     u.usage.label(),
                     u.ips.takeIf { it.isNotEmpty() }?.joinToString(", "),
                 ),
@@ -132,15 +152,21 @@ fun ServerStatsSection(vm: AppViewModel, info: InstanceInfo) {
         }
     }
 
-    SectionCard(title = "Live sessions (${sessions.size})", icon = Icons.Default.Cable) {
-        if (sessions.isEmpty()) Text("Nobody is connected right now.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    SectionCard(title = stringResource(Res.string.stats_live_sessions_n, sessions.size), icon = Icons.Default.Cable) {
+        if (sessions.isEmpty()) Text(
+            stringResource(Res.string.stats_nobody_connected),
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         sessions.forEachIndexed { i, ss ->
             if (i > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             StatsRow(
                 online = true,
                 title = "${ss.userUuid.shortId()} → ${ss.routeId}",
                 lines = listOf(
-                    "${ss.addr} · ${formatDuration(nowUnixSeconds() - ss.since)} · ${ss.channels} ch",
+                    stringResource(
+                        Res.string.stats_session_line, ss.addr,
+                        formatDuration(nowUnixSeconds() - ss.since), ss.channels,
+                    ),
                     ss.usage.label(),
                 ),
                 onKick = { kick = KickTarget.Session(ss.id) },
@@ -150,12 +176,14 @@ fun ServerStatsSection(vm: AppViewModel, info: InstanceInfo) {
 
     kick?.let { target ->
         ConfirmDialog(
-            title = if (target is KickTarget.User) "Kick user?" else "Kick session?",
+            title = stringResource(
+                if (target is KickTarget.User) Res.string.stats_kick_user_title else Res.string.stats_kick_session_title,
+            ),
             text = when (target) {
-                is KickTarget.User -> "Closes every tunnel of ${target.uuid}. They can reconnect unless you remove them from the provider."
-                is KickTarget.Session -> "Closes the tunnels of this session. The client will usually reconnect."
+                is KickTarget.User -> stringResource(Res.string.stats_kick_user_body, target.uuid)
+                is KickTarget.Session -> stringResource(Res.string.stats_kick_session_body)
             },
-            confirmLabel = "Kick",
+            confirmLabel = stringResource(Res.string.action_kick),
             onConfirm = {
                 scope.launch {
                     vm.request {
@@ -163,8 +191,9 @@ fun ServerStatsSection(vm: AppViewModel, info: InstanceInfo) {
                             is KickTarget.User -> kickUser(info.id, target.uuid)
                             is KickTarget.Session -> kickSession(info.id, target.id)
                         }
-                    }.onSuccess { n -> vm.notify("Closed $n tunnel${if (n == 1) "" else "s"}") }
-                        .onFailure { vm.notify(it.message ?: "Kick failed") }
+                    }.onSuccess { n ->
+                        vm.notify(getPluralString(Res.plurals.stats_closed_tunnels, n, n))
+                    }.onFailure { vm.notify(it.message ?: getString(Res.string.stats_kick_failed)) }
                     reloadTick++
                 }
             },
@@ -173,16 +202,15 @@ fun ServerStatsSection(vm: AppViewModel, info: InstanceInfo) {
     }
 
     if (confirmCollect) ConfirmDialog(
-        title = "Collect usage?",
-        text = "Returns what each user moved since the previous collect and starts counting again. " +
-            "Panels use this for billing; collecting here means a panel won't see this traffic.",
-        confirmLabel = "Collect",
+        title = stringResource(Res.string.stats_collect_title),
+        text = stringResource(Res.string.stats_collect_body),
+        confirmLabel = stringResource(Res.string.action_collect),
         destructive = false,
         onConfirm = {
             scope.launch {
                 vm.request { getStats(info.id, collect = true) }
                     .onSuccess { collected = it.collected }
-                    .onFailure { vm.notify(it.message ?: "Collect failed") }
+                    .onFailure { vm.notify(it.message ?: getString(Res.string.stats_collect_failed)) }
             }
         },
         onDismiss = { confirmCollect = false },
@@ -191,9 +219,9 @@ fun ServerStatsSection(vm: AppViewModel, info: InstanceInfo) {
     collected?.let { map ->
         AlertDialog(
             onDismissRequest = { collected = null },
-            title = { Text("Usage since last collect") },
+            title = { Text(stringResource(Res.string.stats_usage_since)) },
             text = {
-                if (map.isEmpty()) Text("No traffic.")
+                if (map.isEmpty()) Text(stringResource(Res.string.stats_no_traffic))
                 else LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(map.entries.sortedByDescending { it.value.up + it.value.down }.toList()) { (uuid, usage) ->
                         Column {
@@ -203,7 +231,7 @@ fun ServerStatsSection(vm: AppViewModel, info: InstanceInfo) {
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { collected = null }) { Text("Done") } },
+            confirmButton = { TextButton(onClick = { collected = null }) { Text(stringResource(Res.string.action_done)) } },
         )
     }
 }
@@ -221,6 +249,8 @@ private fun StatsRow(online: Boolean, title: String, lines: List<String>, onKick
             Text(title, fontFamily = MonoFamily, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             lines.forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
-        if (onKick != null) IconButton(onClick = onKick) { Icon(Icons.Default.PersonOff, "Kick", tint = MaterialTheme.colorScheme.error) }
+        if (onKick != null) IconButton(onClick = onKick) {
+            Icon(Icons.Default.PersonOff, stringResource(Res.string.action_kick), tint = MaterialTheme.colorScheme.error)
+        }
     }
 }

@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.getPluralString
+import org.jetbrains.compose.resources.getString
 import ru.theairblow.turnable.data.AppPreferences
 import ru.theairblow.turnable.data.DEFAULT_SERVICE_ID
 import ru.theairblow.turnable.platform.CaptchaRequest
@@ -54,6 +56,7 @@ import ru.theairblow.turnable.subscription.SubscriptionEntry
 import ru.theairblow.turnable.subscription.fetchSubscription
 import ru.theairblow.turnable.subscription.randomLocalPort
 import ru.theairblow.turnable.ui.util.nowUnixSeconds
+import turnable.composeapp.generated.resources.*
 import kotlin.io.encoding.Base64
 import kotlin.random.Random
 
@@ -196,10 +199,11 @@ class AppViewModel(
 
     /** First launch: create the on-device service that simple mode runs. */
     private suspend fun ensureDefaultService() {
+        val defaultName = getString(Res.string.vm_default_service_name)
         prefs.update { d ->
             if (d.services.isNotEmpty()) d
             else d.copy(
-                services = listOf(ServiceConfig(DEFAULT_SERVICE_ID, "This device", ServiceType.LOCAL)),
+                services = listOf(ServiceConfig(DEFAULT_SERVICE_ID, defaultName, ServiceType.LOCAL)),
                 selectedServiceId = DEFAULT_SERVICE_ID,
             )
         }
@@ -239,7 +243,7 @@ class AppViewModel(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    e.message ?: "Connection failed"
+                    e.message ?: getString(Res.string.vm_connection_failed)
                 }
                 if (client != null) attempt = 1 // we were connected; restart the backoff
                 closeClient()
@@ -262,7 +266,8 @@ class AppViewModel(
 
     /** Connects and processes events until the connection drops; returns why it ended. */
     private suspend fun runSession(serviceId: String): String {
-        val svc = prefsData.value.services.firstOrNull { it.id == serviceId } ?: error("Service no longer exists")
+        val svc = prefsData.value.services.firstOrNull { it.id == serviceId }
+            ?: error(getString(Res.string.vm_service_gone))
         val endpoint = when (svc.type) {
             ServiceType.LOCAL -> ServiceEndpoint.Unix(localHost.socketPath(svc.id))
             ServiceType.REMOTE -> ServiceEndpoint.Tcp(svc.host, svc.port)
@@ -372,7 +377,7 @@ class AppViewModel(
     /** The service got the tokens; the client carries on connecting by itself. */
     fun captchaSolved(instanceId: String) {
         clearCaptcha(instanceId)
-        notify("Captcha solved, connecting…")
+        viewModelScope.launch { notify(getString(Res.string.vm_captcha_solved)) }
     }
 
     fun clearCaptcha(instanceId: String) {
@@ -413,7 +418,7 @@ class AppViewModel(
 
     /** Runs [block] against the connected service. */
     suspend fun <T> request(block: suspend TurnableServiceClient.() -> T): Result<T> {
-        val c = client ?: return Result.failure(IllegalStateException("Not connected to a service"))
+        val c = client ?: return Result.failure(IllegalStateException(getString(Res.string.vm_not_connected)))
         return try {
             Result.success(c.block())
         } catch (e: CancellationException) {
@@ -426,7 +431,7 @@ class AppViewModel(
     /** Like [request], then reloads instances and providers; reports failures as a message. */
     suspend fun <T> mutate(block: suspend TurnableServiceClient.() -> T): Result<T> =
         request(block).also { result ->
-            result.exceptionOrNull()?.let { notify(it.message ?: "Request failed") }
+            result.exceptionOrNull()?.let { notify(it.message ?: getString(Res.string.vm_request_failed)) }
             refresh()
         }
 
@@ -475,7 +480,7 @@ class AppViewModel(
     /** Fetches [url] and, if it serves links, saves it as a subscription of the active service and imports them. */
     suspend fun addSubscription(url: String, name: String): Result<Unit> {
         val serviceId = (_connection.value as? ConnectionState.Connected)?.serviceId
-            ?: return Result.failure(IllegalStateException("Connect to a service first"))
+            ?: return Result.failure(IllegalStateException(getString(Res.string.vm_connect_first)))
         val fetched = try {
             fetchSubscription(url.trim())
         } catch (e: CancellationException) {
@@ -603,11 +608,14 @@ class AppViewModel(
                         lastError = failures.joinToString("\n"),
                     )
                 }
-                if (failures.isNotEmpty()) notify("${failures.size} link(s) of ${sub.displayName} failed to start")
+                if (failures.isNotEmpty()) notify(
+                    getPluralString(Res.plurals.vm_links_failed, failures.size, failures.size, sub.displayName),
+                )
             }
             result.exceptionOrNull()?.let { e ->
                 if (e is CancellationException) throw e
-                updateSubscription(id) { it.copy(lastError = e.message ?: "Update failed", lastAttemptSec = nowUnixSeconds()) }
+                val reason = e.message ?: getString(Res.string.vm_update_failed)
+                updateSubscription(id) { it.copy(lastError = reason, lastAttemptSec = nowUnixSeconds()) }
             }
             refresh()
             return result
@@ -651,7 +659,7 @@ class AppViewModel(
                 if (prefsData.value.selectedServiceId == serviceId) {
                     _connection.value = ConnectionState.Failed(serviceId, message)
                 }
-                notify("Couldn't start ${svc.name}: ${e.message}")
+                notify(getString(Res.string.vm_could_not_start, svc.name, e.message.orEmpty()))
             } finally {
                 _localStarting.update { it - serviceId }
             }
@@ -662,7 +670,7 @@ class AppViewModel(
     private suspend fun resolveVersion(svc: ServiceConfig): String {
         if (svc.version.isNotBlank()) {
             check(isSupportedCore(svc.version)) {
-                "Turnable ${svc.version} is too old. This app needs $MIN_CORE_VERSION or newer, or a custom core."
+                getString(Res.string.vm_core_too_old, svc.version, MIN_CORE_VERSION)
             }
             return svc.version
         }
@@ -703,8 +711,8 @@ class AppViewModel(
         viewModelScope.launch {
             _updating.value = true
             updateLocalService(offered.serviceId)
-                .onSuccess { notify("Updated to $it") }
-                .onFailure { notify("Update failed: ${it.message}") }
+                .onSuccess { notify(getString(Res.string.vm_updated_to, it)) }
+                .onFailure { notify(getString(Res.string.vm_update_failed_detail, it.message.orEmpty())) }
             _updating.value = false
             clearUpdate()
         }
@@ -729,9 +737,10 @@ class AppViewModel(
 
     /** Switches [serviceId] to the newest release and restarts it if running; returns the version now in use. */
     private suspend fun updateLocalService(serviceId: String): Result<String> = runCatching {
-        val latest = localHost.fetchAvailableVersions().firstOrNull() ?: error("No Turnable release found")
+        val latest = localHost.fetchAvailableVersions().firstOrNull()
+            ?: error(getString(Res.string.vm_no_release))
         val svc = prefsData.value.services.first { it.id == serviceId }
-        check(svc.customCorePath.isBlank()) { "A custom core is in use. Clear it to follow releases." }
+        check(svc.customCorePath.isBlank()) { getString(Res.string.vm_custom_core_in_use) }
         if (svc.version != latest) {
             localHost.install(latest)
             prefs.update { d -> d.copy(services = d.services.map { if (it.id == serviceId) it.copy(version = latest) else it }) }
