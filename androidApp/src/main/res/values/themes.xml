@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.Turnable" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/launch_background</item>
+    </style>
+    <color name="launch_background">#FFF8F9FF</color>
+</resources>
