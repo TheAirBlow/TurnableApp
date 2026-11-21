@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -76,6 +77,7 @@ import ru.theairblow.turnable.proto.InstanceStatus
 import ru.theairblow.turnable.proto.InstanceType
 import ru.theairblow.turnable.subscription.Subscription
 import ru.theairblow.turnable.ui.components.AdaptiveListDetail
+import ru.theairblow.turnable.service.AppUpdate
 import ru.theairblow.turnable.service.DownloadProgress
 import ru.theairblow.turnable.ui.components.DownloadBar
 import ru.theairblow.turnable.ui.components.EmptyState
@@ -158,6 +160,7 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
     val connection by vm.connection.collectAsStateWithLifecycle()
     val captchas by vm.captchas.collectAsStateWithLifecycle()
     val update by vm.update.collectAsStateWithLifecycle()
+    val appUpdate by vm.appUpdate.collectAsStateWithLifecycle()
     val installing by vm.updating.collectAsStateWithLifecycle()
     val download by vm.coreDownload.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -247,7 +250,11 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
             contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            update?.let { u -> item(key = "update") { UpdateBanner(u, installing, download, vm::applyUpdate, vm::dismissUpdate, Modifier.animateItem()) } }
+            update?.let { u ->
+                item(key = "update") {
+                    UpdateBanner(u, installing, download, appUpdate, vm::applyUpdate, vm::dismissUpdate, Modifier.animateItem())
+                }
+            }
             items(captchas, key = { "captcha-${it.id}" }) { c ->
                 CaptchaBanner(c, onSolve = { vm.openCaptcha(c.instanceId) }, modifier = Modifier.animateItem())
             }
@@ -455,9 +462,17 @@ internal fun CaptchaBanner(request: CaptchaRequest, onSolve: () -> Unit, modifie
     }
 }
 
-/** Offers a newer core release and waits for the user's answer. */
+/** Offers a newer core release and waits for the user's answer; warns when the app itself is outdated. */
 @Composable
-internal fun UpdateBanner(update: CoreUpdate, updating: Boolean, download: DownloadProgress?, onUpdate: () -> Unit, onLater: () -> Unit, modifier: Modifier = Modifier) {
+internal fun UpdateBanner(
+    update: CoreUpdate,
+    updating: Boolean,
+    download: DownloadProgress?,
+    appUpdate: AppUpdate?,
+    onUpdate: () -> Unit,
+    onLater: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.primaryContainer) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -470,6 +485,15 @@ internal fun UpdateBanner(update: CoreUpdate, updating: Boolean, download: Downl
                     Text(
                         stringResource(Res.string.clients_update_body, update.serviceName),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
+            appUpdate?.let { app ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.WarningAmber, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                    Text(
+                        stringResource(Res.string.clients_update_app_outdated, app.version),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
                     )
                 }
             }

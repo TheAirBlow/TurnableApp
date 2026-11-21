@@ -35,12 +35,14 @@ import ru.theairblow.turnable.proto.StartClientRequest
 import ru.theairblow.turnable.proto.LogAttr
 import ru.theairblow.turnable.proto.ProviderInfo
 import ru.theairblow.turnable.proto.SessionEvent
+import ru.theairblow.turnable.service.AppUpdate
 import ru.theairblow.turnable.service.ClientKeys
 import ru.theairblow.turnable.service.DEFAULT_CORE_VERSION
+import ru.theairblow.turnable.service.fetchAppUpdate
 import ru.theairblow.turnable.service.DownloadProgress
 import ru.theairblow.turnable.service.LocalServiceHost
 import ru.theairblow.turnable.service.MIN_CORE_VERSION
-import ru.theairblow.turnable.service.compareCoreVersions
+import ru.theairblow.turnable.service.compareVersions
 import ru.theairblow.turnable.service.isSupportedCore
 import ru.theairblow.turnable.service.ServiceEndpoint
 import ru.theairblow.turnable.service.ServiceEvent
@@ -77,6 +79,9 @@ sealed interface ConnectionState {
 }
 
 data class LogEntry(val id: Long, val timeNs: Long, val level: Int, val message: String, val attrs: List<LogAttr>)
+
+/** What one update check found; either side may be missing. */
+data class UpdateCheck(val core: CoreUpdate?, val app: AppUpdate?)
 
 private const val MAX_LOGS = 2000
 private const val LOG_FLUSH_MS = 150L
@@ -139,6 +144,10 @@ class AppViewModel(
     private val _update = MutableStateFlow<CoreUpdate?>(null)
     /** A newer core release waiting for the user's answer. */
     val update: StateFlow<CoreUpdate?> = _update.asStateFlow()
+
+    private val _appUpdate = MutableStateFlow<AppUpdate?>(null)
+    /** A newer app release than this build, when the last check found one. */
+    val appUpdate: StateFlow<AppUpdate?> = _appUpdate.asStateFlow()
 
     private val _captchaToSolve = MutableStateFlow<String?>(null)
     /** Instance whose captcha screen is open. */
@@ -684,24 +693,31 @@ class AppViewModel(
     }
 
     /**
-     * Looks for a release newer than what a local service runs and offers it. Unless [force], the check is
-     * skipped when one ran recently, and a release the user declined stays quiet. Returns the offered update.
+     * Looks for a newer app release and a core release newer than what a local service runs. Unless [force],
+     * the check is skipped when one ran recently, and a core release the user declined stays quiet.
      */
-    suspend fun checkForUpdates(force: Boolean = false): Result<CoreUpdate?> = runCatching {
+    suspend fun checkForUpdates(force: Boolean = false): Result<UpdateCheck> = runCatching {
         val now = nowUnixSeconds()
         val p = prefsData.value
-        if (!force && now - p.lastUpdateCheckSec < UPDATE_CHECK_INTERVAL_MS / 1000) return@runCatching _update.value
-        val latest = localHost.fetchAvailableVersions().firstOrNull() ?: return@runCatching null
+        if (!force && now - p.lastUpdateCheckSec < UPDATE_CHECK_INTERVAL_MS / 1000) {
+            return@runCatching UpdateCheck(_update.value, _appUpdate.value)
+        }
         prefs.update { it.copy(lastUpdateCheckSec = now) }
+        // A failed app check keeps the previous answer; a failed core check still fails the whole check
+        val app = runCatching { fetchAppUpdate() }.getOrElse { _appUpdate.value }
+        val appChanged = app != _appUpdate.value
+        _appUpdate.value = app
+        val latest = localHost.fetchAvailableVersions().firstOrNull()
+            ?: return@runCatching UpdateCheck(_update.value, app)
         val found = p.services.filter { it.type == ServiceType.LOCAL && it.customCorePath.isBlank() }.firstNotNullOfOrNull { svc ->
             val current = svc.version.ifBlank { localHost.installedVersions().firstOrNull() ?: DEFAULT_CORE_VERSION }
-            CoreUpdate(svc.id, svc.name, latest).takeIf { compareCoreVersions(latest, current) > 0 }
+            CoreUpdate(svc.id, svc.name, latest).takeIf { compareVersions(latest, current) > 0 }
         }?.takeIf { force || it.version != p.dismissedUpdate }
-        if (found != _update.value) {
+        if (found != _update.value || appChanged) {
             _update.value = found
-            if (found != null) notifier.updateAvailable(found) else notifier.updateCleared()
+            if (found != null) notifier.updateAvailable(found, app != null) else notifier.updateCleared()
         }
-        found
+        UpdateCheck(found, app)
     }
 
     /** Installs the offered release and restarts that service. */

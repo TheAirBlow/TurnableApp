@@ -90,14 +90,17 @@ class AndroidNotifier(private val context: Context) : PlatformNotifier {
         NotificationManagerCompat.from(context).cancel(notificationId(instanceId))
     }
 
-    override fun updateAvailable(update: CoreUpdate) {
+    override fun updateAvailable(update: CoreUpdate, appOutdated: Boolean) {
         if (!canNotify()) return
         val open = context.packageManager.getLaunchIntentForPackage(context.packageName)
             ?.let { PendingIntent.getActivity(context, UPDATE_NOTIFICATION_ID, it, PendingIntent.FLAG_IMMUTABLE) }
         val notification = NotificationCompat.Builder(context, CHANNEL_UPDATE)
             .setSmallIcon(R.drawable.ic_turnable_notification)
             .setContentTitle(context.getString(R.string.notification_update_title, update.version))
-            .setContentText(context.getString(R.string.notification_update_text, update.serviceName))
+            .setContentText(
+                if (appOutdated) context.getString(R.string.notification_update_app_outdated)
+                else context.getString(R.string.notification_update_text, update.serviceName),
+            )
             .setContentIntent(open)
             .addAction(0, context.getString(R.string.notification_action_update), answer(UpdateActionReceiver.ACTION_UPDATE))
             .addAction(0, context.getString(R.string.notification_action_later), answer(UpdateActionReceiver.ACTION_LATER))

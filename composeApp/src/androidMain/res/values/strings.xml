@@ -13,6 +13,7 @@
 
     <string name="notification_update_title">Turnable %1$s is available</string>
     <string name="notification_update_text">Installing it restarts %1$s for a moment</string>
+    <string name="notification_update_app_outdated">Update the app first, the new core may need it</string>
     <string name="notification_action_update">Update</string>
     <string name="notification_action_later">Later</string>
 

@@ -107,6 +107,7 @@
     <string name="clients_support">Поддержка</string>
     <string name="clients_update_available">Доступен Turnable %1$s</string>
     <string name="clients_update_body">При установке %1$s перезапустится, и соединения ненадолго прервутся.</string>
+    <string name="clients_update_app_outdated">Доступно обновление приложения %1$s. Сначала обновите приложение: новому ядру может понадобиться новая версия.</string>
 
     <plurals name="clients_added">
         <item quantity="one">Добавлен %1$d клиент</item>
@@ -517,6 +518,9 @@
     <string name="settings_update_automatically">Обновлять автоматически</string>
     <string name="settings_up_to_date">Turnable обновлён</string>
     <string name="settings_update_available">Доступен Turnable %1$s</string>
+    <string name="settings_app_update_available">Доступно обновление приложения %1$s</string>
+    <string name="settings_app_update_hint">Обновите приложение до ядра: новому ядру может понадобиться новая версия.</string>
+    <string name="settings_open_release">Страница релиза</string>
     <string name="settings_check_failed">Не удалось проверить обновления: %1$s</string>
 
     <plurals name="settings_imported">
@@ -567,6 +571,7 @@
     <string name="desktop_captcha_balloon">%1$s. Нажмите, чтобы решить.</string>
     <string name="desktop_update_title">Доступно обновление</string>
     <string name="desktop_update_message">Доступен Turnable %1$s. Откройте приложение, чтобы обновить.</string>
+    <string name="desktop_update_app_outdated">Доступен Turnable %1$s. Сначала обновите приложение: новому ядру может понадобиться новая версия.</string>
 
     <!-- View model messages -->
     <string name="vm_connection_failed">Не удалось подключиться</string>

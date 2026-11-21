@@ -26,7 +26,7 @@ private val ansiEscape = Regex("\u001B\\[[0-9;]*m")
 
 private val json = Json { ignoreUnknownKeys = true }
 
-private val versionOrder = Comparator<String> { a, b -> compareCoreVersions(b, a) }
+private val versionOrder = Comparator<String> { a, b -> compareVersions(b, a) }
 
 @Serializable private data class GithubRelease(@SerialName("tag_name") val tagName: String = "")
 

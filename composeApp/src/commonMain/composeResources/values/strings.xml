@@ -107,6 +107,7 @@
     <string name="clients_support">Support</string>
     <string name="clients_update_available">Turnable %1$s is available</string>
     <string name="clients_update_body">Installing it restarts %1$s and drops its connections for a moment.</string>
+    <string name="clients_update_app_outdated">App update %1$s is available. Update the app first; the new core may need it.</string>
 
     <plurals name="clients_added">
         <item quantity="one">Added %1$d client</item>
@@ -501,6 +502,9 @@
     <string name="settings_update_automatically">Update automatically</string>
     <string name="settings_up_to_date">Turnable is up to date</string>
     <string name="settings_update_available">Turnable %1$s is available</string>
+    <string name="settings_app_update_available">App update %1$s is available</string>
+    <string name="settings_app_update_hint">Update the app before the core; a newer core may need the new app.</string>
+    <string name="settings_open_release">Release page</string>
     <string name="settings_check_failed">Could not check for updates: %1$s</string>
 
     <plurals name="settings_imported">
@@ -549,6 +553,7 @@
     <string name="desktop_captcha_balloon">%1$s. Click to solve it.</string>
     <string name="desktop_update_title">Update available</string>
     <string name="desktop_update_message">Turnable %1$s is available. Open the app to update.</string>
+    <string name="desktop_update_app_outdated">Turnable %1$s is available. Update the app first; the new core may need it.</string>
 
     <!-- View model messages -->
     <string name="vm_connection_failed">Connection failed</string>

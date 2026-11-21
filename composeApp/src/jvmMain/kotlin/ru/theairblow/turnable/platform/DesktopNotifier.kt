@@ -58,9 +58,10 @@ class DesktopNotifier : PlatformNotifier {
         }
     }
 
-    override fun updateAvailable(update: CoreUpdate) {
+    override fun updateAvailable(update: CoreUpdate, appOutdated: Boolean) {
         val title = text(Res.string.desktop_update_title)
-        val message = text(Res.string.desktop_update_message, update.version)
+        val message = if (appOutdated) text(Res.string.desktop_update_app_outdated, update.version)
+        else text(Res.string.desktop_update_message, update.version)
         if (tray != null) tray.displayMessage(title, message, TrayIcon.MessageType.INFO)
         else runCatching { ProcessBuilder("notify-send", "-a", TITLE, title, message).start() }
     }

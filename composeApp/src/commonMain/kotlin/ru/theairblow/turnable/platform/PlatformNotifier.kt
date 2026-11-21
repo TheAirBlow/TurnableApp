@@ -26,7 +26,7 @@ interface PlatformNotifier {
     fun captchaCleared(instanceId: String)
 
     /** A newer core release can be installed; the user answers through the app or the notification. */
-    fun updateAvailable(update: CoreUpdate) = Unit
+    fun updateAvailable(update: CoreUpdate, appOutdated: Boolean = false) = Unit
 
     fun updateCleared() = Unit
 

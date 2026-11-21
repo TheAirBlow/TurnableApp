@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -32,7 +33,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
@@ -53,6 +57,7 @@ import ru.theairblow.turnable.data.ServiceConfig
 import ru.theairblow.turnable.data.ThemeMode
 import ru.theairblow.turnable.data.DEFAULT_SERVICE_ID
 import ru.theairblow.turnable.service.APP_VERSION
+import ru.theairblow.turnable.service.AppUpdate
 import ru.theairblow.turnable.service.MIN_CORE_VERSION
 import ru.theairblow.turnable.service.SERVICE_PROTOCOL_VERSION
 import ru.theairblow.turnable.service.USER_AGENT
@@ -95,6 +100,7 @@ private fun SettingsContent(vm: AppViewModel, openLogs: () -> Unit) {
     val scope = rememberCoroutineScope()
     val local = prefs.services.firstOrNull { it.id == DEFAULT_SERVICE_ID }
     val advanced = prefs.advancedMode
+    val appUpdate by vm.appUpdate.collectAsStateWithLifecycle()
     val backupLabel = stringResource(Res.string.settings_backup)
 
     Scaffold(topBar = { PaneTopBar(stringResource(Res.string.settings_title)) }) { padding ->
@@ -194,6 +200,7 @@ private fun SettingsContent(vm: AppViewModel, openLogs: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 InfoRow(stringResource(Res.string.settings_version), APP_VERSION)
+                appUpdate?.let { AppUpdateNotice(it) }
                 InfoRow(stringResource(Res.string.settings_service_protocol), "v$SERVICE_PROTOCOL_VERSION")
                 InfoRow(stringResource(Res.string.settings_user_agent), USER_AGENT, mono = true)
             }
@@ -236,8 +243,11 @@ private fun LocalServiceCard(vm: AppViewModel, svc: ServiceConfig, autoUpdate: B
                     vm.checkForUpdates(force = true)
                         .onSuccess {
                             notify(
-                                if (it == null) getString(Res.string.settings_up_to_date)
-                                else getString(Res.string.settings_update_available, it.version),
+                                when {
+                                    it.core != null -> getString(Res.string.settings_update_available, it.core.version)
+                                    it.app != null -> getString(Res.string.settings_app_update_available, it.app.version)
+                                    else -> getString(Res.string.settings_up_to_date)
+                                },
                             )
                         }
                         .onFailure { notify(getString(Res.string.settings_check_failed, it.message.orEmpty())) }
@@ -260,5 +270,32 @@ private fun LocalServiceCard(vm: AppViewModel, svc: ServiceConfig, autoUpdate: B
         )
         download?.let { DownloadBar(it) }
         (connection as? ConnectionState.Failed)?.let { ErrorBanner(it.message) }
+    }
+}
+
+/** A newer app release; the core update banner repeats the warning. */
+@Composable
+private fun AppUpdateNotice(update: AppUpdate) {
+    val uriHandler = LocalUriHandler.current
+    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.tertiaryContainer) {
+        Row(
+            Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(Icons.Default.SystemUpdate, null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    stringResource(Res.string.settings_app_update_available, update.version),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+                Text(
+                    stringResource(Res.string.settings_app_update_hint),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+            }
+            if (update.url.isNotBlank()) TextButton(onClick = { uriHandler.openUri(update.url) }) {
+                Text(stringResource(Res.string.settings_open_release))
+            }
+        }
     }
 }

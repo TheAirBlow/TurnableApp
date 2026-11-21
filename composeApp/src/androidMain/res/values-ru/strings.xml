@@ -13,6 +13,7 @@
 
     <string name="notification_update_title">Доступен Turnable %1$s</string>
     <string name="notification_update_text">При установке %1$s ненадолго перезапустится</string>
+    <string name="notification_update_app_outdated">Сначала обновите приложение: новому ядру может понадобиться новая версия</string>
     <string name="notification_action_update">Обновить</string>
     <string name="notification_action_later">Позже</string>
 
