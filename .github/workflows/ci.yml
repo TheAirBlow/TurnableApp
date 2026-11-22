@@ -83,14 +83,14 @@ jobs:
     needs: [version]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
-
-      - name: Stamp version
-        run: sed -i 's/^const val APP_VERSION = .*/const val APP_VERSION = "${{ needs.version.outputs.number }}"/' composeApp/src/commonMain/kotlin/ru/theairblow/turnable/service/Http.kt
 
       - name: Restore signing key
         env:
@@ -107,8 +107,8 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          ./gradlew :androidApp:assembleRelease \
-            -PappVersion=${{ needs.version.outputs.number }} -PappVersionCode=${{ needs.version.outputs.code }}
+          [ "${{ needs.version.outputs.bump }}" != none ] && VERSION_ARG=-PappVersion=${{ needs.version.outputs.number }}
+          ./gradlew :androidApp:assembleRelease $VERSION_ARG -PappVersionCode=${{ needs.version.outputs.code }}
           mkdir -p dist
           APK="$(ls androidApp/build/outputs/apk/release/*.apk | head -n1)"
           cp "$APK" dist/turnable-android.apk
@@ -131,22 +131,20 @@ jobs:
           - { name: macos,   os: macos-latest,   task: packageDmg, ext: dmg }
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Stamp version
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" = "macOS" ]; then SED=(sed -i ''); else SED=(sed -i); fi
-          "${SED[@]}" 's/^const val APP_VERSION = .*/const val APP_VERSION = "${{ needs.version.outputs.number }}"/' composeApp/src/commonMain/kotlin/ru/theairblow/turnable/service/Http.kt
-
       - name: Package
         shell: bash
         run: |
-          ./gradlew :composeApp:${{ matrix.task }} -PappVersion=${{ needs.version.outputs.number }}
+          [ "${{ needs.version.outputs.bump }}" != none ] && VERSION_ARG=-PappVersion=${{ needs.version.outputs.number }}
+          ./gradlew :composeApp:${{ matrix.task }} $VERSION_ARG
           mkdir -p dist
           cp "$(find composeApp/build/compose/binaries -name '*.${{ matrix.ext }}' | head -n1)" "dist/turnable-${{ matrix.name }}.${{ matrix.ext }}"
 

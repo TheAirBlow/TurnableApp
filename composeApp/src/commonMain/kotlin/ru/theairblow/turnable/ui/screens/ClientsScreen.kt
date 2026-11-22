@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
@@ -59,6 +62,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -82,6 +86,7 @@ import ru.theairblow.turnable.ui.components.IconTile
 import ru.theairblow.turnable.ui.components.ListCard
 import ru.theairblow.turnable.ui.components.PaneTopBar
 import ru.theairblow.turnable.ui.components.StatusDot
+import ru.theairblow.turnable.ui.components.StatusKind
 import ru.theairblow.turnable.ui.components.rememberClipboardReader
 import ru.theairblow.turnable.ui.util.formatBytes
 import ru.theairblow.turnable.ui.util.formatDuration
@@ -106,6 +111,17 @@ private fun groupClients(clients: List<InstanceInfo>, subscriptions: List<Subscr
     val groups = subscriptions.map { s -> ClientGroup(s, clients.filter { owner[it.id] == s.id }) }
     val loose = clients.filter { it.id !in owner }
     return groups + listOfNotNull(ClientGroup(null, loose).takeIf { loose.isNotEmpty() })
+}
+
+/** Rows of a stack join into one block with small gaps; only the outer corners of the block are fully round. */
+@Composable
+private fun stackShape(first: Boolean, last: Boolean): Shape {
+    val outer = MaterialTheme.shapes.large.topStart
+    val inner = CornerSize(6.dp)
+    return RoundedCornerShape(
+        topStart = if (first) outer else inner, topEnd = if (first) outer else inner,
+        bottomEnd = if (last) outer else inner, bottomStart = if (last) outer else inner,
+    )
 }
 
 private val InstanceInfo.isRunning: Boolean
@@ -260,11 +276,11 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
         } else LazyColumn(
             Modifier.fillMaxSize().padding(padding),
             contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            if (shownAppUpdate != null || update != null) item(key = "updates") { banners(Modifier.animateItem()) }
+            if (shownAppUpdate != null || update != null) item(key = "updates") { banners(Modifier.animateItem().padding(bottom = 6.dp)) }
             items(captchas, key = { "captcha-${it.id}" }) { c ->
-                CaptchaBanner(c, onSolve = { vm.openCaptcha(c.instanceId) }, modifier = Modifier.animateItem())
+                CaptchaBanner(c, onSolve = { vm.openCaptcha(c.instanceId) }, modifier = Modifier.animateItem().padding(bottom = 6.dp))
             }
             groups.forEach { group ->
                 if (grouped) item(key = "group-${group.id}") {
@@ -279,7 +295,8 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
                         onDisconnectAll = { scope.launch { vm.setGroupRunning(group.clients, false) } },
                         onEdit = { editing = group.subscription },
                         onRemove = { removing = group.subscription },
-                        modifier = Modifier.animateItem(),
+                        shape = stackShape(first = true, last = group.id in collapsed || group.clients.isEmpty()),
+                        modifier = Modifier.animateItem().padding(top = 8.dp),
                     )
                 }
                 if (!grouped || group.id !in collapsed) {
@@ -290,14 +307,16 @@ private fun ClientList(vm: AppViewModel, clients: List<InstanceInfo>, selectedId
                             modifier = Modifier.padding(horizontal = 8.dp),
                         )
                     }
-                    items(group.clients, key = { it.id }) { info ->
+                    itemsIndexed(group.clients, key = { _, it -> it.id }) { index, info ->
+                        val first = !grouped && index == 0
                         ClientRow(
                             info, listen[info.id]?.joinToString(", ")?.ifEmpty { null },
                             selected = info.id == selectedId,
                             needsCaptcha = captchas.any { it.instanceId == info.id },
                             onClick = { onOpen(info) },
                             onToggle = { scope.launch { vm.toggleInstance(info) } },
-                            modifier = Modifier.animateItem(),
+                            shape = stackShape(first, last = index == group.clients.lastIndex),
+                            modifier = Modifier.animateItem().padding(top = if (first) 8.dp else 0.dp),
                         )
                     }
                 }
@@ -332,6 +351,7 @@ private fun ClientRow(
     needsCaptcha: Boolean,
     onClick: () -> Unit,
     onToggle: () -> Unit,
+    shape: Shape,
     modifier: Modifier = Modifier,
 ) {
     val status = if (needsCaptcha) stringResource(Res.string.status_captcha_needed) else info.statusLabel
@@ -340,7 +360,10 @@ private fun ClientRow(
         subtitle = listOfNotNull(status, address).joinToString(" · "),
         selected = selected,
         onClick = onClick,
-        leading = { Box(Modifier.size(42.dp), Alignment.Center) { StatusDot(if (needsCaptcha) ru.theairblow.turnable.ui.components.StatusKind.Failed else info.statusKind, size = 12.dp) } },
+        shape = shape,
+        verticalPadding = 10.dp,
+        leadingGap = 12.dp,
+        leading = { Box(Modifier.size(20.dp), Alignment.Center) { StatusDot(if (needsCaptcha) StatusKind.Failed else info.statusKind, size = 14.dp) } },
         trailing = { Switch(checked = info.isRunning, onCheckedChange = { onToggle() }) },
         modifier = modifier,
     )
@@ -359,13 +382,14 @@ private fun GroupHeader(
     onDisconnectAll: () -> Unit,
     onEdit: () -> Unit,
     onRemove: () -> Unit,
+    shape: Shape,
     modifier: Modifier = Modifier,
 ) {
     val sub = group.subscription
     val uriHandler = LocalUriHandler.current
     var menu by remember { mutableStateOf(false) }
     val online = group.clients.count { it.status == InstanceStatus.INSTANCE_STATUS_STARTED }
-    Surface(onClick = onToggle, modifier = modifier.fillMaxWidth().animateContentSize(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+    Surface(onClick = onToggle, modifier = modifier.fillMaxWidth().animateContentSize(), shape = shape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(if (sub != null) Icons.Default.RssFeed else Icons.Default.SettingsEthernet, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)

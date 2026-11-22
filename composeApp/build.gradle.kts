@@ -19,6 +19,7 @@ plugins {
 /** Writes the version the build was packaged as, since [APP_VERSION] feeds update checks. */
 abstract class GenerateAppVersionTask : DefaultTask() {
     @get:Input abstract val version: Property<String>
+    @get:Input abstract val dev: Property<Boolean>
     @get:OutputDirectory abstract val outputDir: DirectoryProperty
 
     @TaskAction
@@ -31,16 +32,20 @@ abstract class GenerateAppVersionTask : DefaultTask() {
 
             /** The version this build was packaged as. */
             const val APP_VERSION = "${version.get()}"
+
+            /** True for builds that are not a clean release, such as a commit past a tag or a dirty tree. */
+            const val IS_DEV_BUILD = ${dev.get()}
             """.trimIndent() + "\n",
         )
     }
 }
 
-// The version the CI passes for tagged builds; AppUpdate compares it against release tags
-val appVersion = providers.gradleProperty("appVersion").getOrElse("1.0")
+// A release tag from CI, or a git-derived dev version; AppUpdate compares it against release tags
+val appVersion = rootProject.extra["appVersion"] as String
 
 val generateAppVersion = tasks.register<GenerateAppVersionTask>("generateAppVersion") {
     version.set(appVersion)
+    dev.set(!Regex("""\d+\.\d+(\.\d+)?""").matches(appVersion))
     outputDir.set(layout.buildDirectory.dir("generated/appVersion/commonMain/kotlin"))
 }
 
@@ -128,8 +133,8 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "ru.theairblow.turnable"
             // Installers reject a 0.x major version
-            packageVersion = providers.gradleProperty("appVersion").getOrElse("1.0.0")
-                .split('.').let { (major, minor, patch) -> if (major == "0") "1.$minor.$patch" else "$major.$minor.$patch" }
+            packageVersion = Regex("""^(\d+)\.(\d+)(?:\.(\d+))?""").find(appVersion)!!.destructured
+                .let { (major, minor, patch) -> "${if (major == "0") "1" else major}.$minor.${patch.ifEmpty { "0" }}" }
         }
     }
 }

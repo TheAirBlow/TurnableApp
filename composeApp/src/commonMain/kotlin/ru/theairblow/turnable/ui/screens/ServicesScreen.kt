@@ -185,9 +185,13 @@ fun ServicesScreen(vm: AppViewModel) {
                     onDeleted = { pane = null },
                 )
             }
-            is ServicePane.Logs -> LogsPane(
-                vm, title = stringResource(Res.string.services_service_logs), onBack = { pane = ServicePane.Detail(p.id) },
-            )
+            is ServicePane.Logs -> {
+                val svc = prefs.services.firstOrNull { it.id == p.id }
+                LogsPane(
+                    vm, title = stringResource(Res.string.services_service_logs), onBack = { pane = ServicePane.Detail(p.id) },
+                    verbose = svc?.verbose.takeIf { svc?.type == ServiceType.LOCAL }, onVerbose = { vm.updateVerbose(p.id, it) },
+                )
+            }
         }
     }
 }
@@ -364,6 +368,10 @@ private fun ServiceDetail(
                             else Res.string.service_captcha_automatic,
                         ),
                     )
+                    InfoRow(
+                        stringResource(Res.string.service_logging),
+                        stringResource(if (svc.verbose) Res.string.service_logging_verbose else Res.string.service_logging_normal),
+                    )
                     InfoRow(stringResource(Res.string.service_socket), vm.localSocketPath(svc.id), mono = true, copyable = true)
                 } else {
                     InfoRow(stringResource(Res.string.service_host), svc.host)
@@ -471,6 +479,7 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
     var version by remember { mutableStateOf(existing?.version ?: "") }
     var customCore by remember { mutableStateOf(existing?.customCorePath ?: "") }
     var forceManual by remember { mutableStateOf(existing?.forceManualCaptcha ?: false) }
+    var verbose by remember { mutableStateOf(existing?.verbose ?: false) }
     var versions by remember { mutableStateOf<List<String>>(emptyList()) }
     var versionsError by remember { mutableStateOf<String?>(null) }
     var loadingVersions by remember { mutableStateOf(false) }
@@ -509,7 +518,7 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
                     val id = existing?.id ?: Random.nextLong().toULong().toString(16)
                     onSave(
                         when (type) {
-                            ServiceType.LOCAL -> ServiceConfig(id, name.trim(), ServiceType.LOCAL, version = version.trim(), customCorePath = customCore, forceManualCaptcha = forceManual)
+                            ServiceType.LOCAL -> ServiceConfig(id, name.trim(), ServiceType.LOCAL, version = version.trim(), customCorePath = customCore, forceManualCaptcha = forceManual, verbose = verbose)
                             ServiceType.REMOTE -> ServiceConfig(
                                 id, name.trim(), ServiceType.REMOTE, host = host.trim(), port = portValue ?: 0,
                                 clientPubKeyB64 = pubKey.trim(), clientPrivKeyB64 = privKey.trim(), serverPubKeyB64 = serverKey.trim(),
@@ -574,6 +583,8 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
                     stringResource(Res.string.service_force_manual), forceManual, { forceManual = it },
                     stringResource(Res.string.service_force_manual_hint),
                 )
+                FormSection(stringResource(Res.string.service_logging))
+                SwitchRow(stringResource(Res.string.service_verbose), verbose, { verbose = it }, stringResource(Res.string.service_verbose_hint))
             } else {
                 FormSection(stringResource(Res.string.service_address_section))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

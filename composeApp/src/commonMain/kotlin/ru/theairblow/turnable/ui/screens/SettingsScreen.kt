@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Restore
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
@@ -60,6 +59,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.data.AppPreferencesData
 import ru.theairblow.turnable.data.DEFAULT_SERVICE_ID
+import ru.theairblow.turnable.service.isSupportedCore
 import ru.theairblow.turnable.data.ServiceConfig
 import ru.theairblow.turnable.data.ServiceType
 import ru.theairblow.turnable.data.ThemeMode
@@ -78,6 +78,7 @@ import ru.theairblow.turnable.ui.components.PaneTopBar
 import ru.theairblow.turnable.ui.components.SectionCard
 import ru.theairblow.turnable.ui.components.StatusBadge
 import ru.theairblow.turnable.ui.components.SwitchRow
+import ru.theairblow.turnable.ui.components.WarningText
 import ru.theairblow.turnable.ui.components.rememberClipboardReader
 import ru.theairblow.turnable.ui.components.rememberCopier
 import ru.theairblow.turnable.ui.util.asTag
@@ -97,13 +98,6 @@ private val TWO_COLUMNS_FROM = 760.dp
 
 @Composable
 fun SettingsScreen(vm: AppViewModel) {
-    var logs by remember { mutableStateOf(false) }
-    if (logs) LogsPane(vm, title = stringResource(Res.string.services_service_logs), onBack = { logs = false })
-    else SettingsContent(vm, openLogs = { logs = true })
-}
-
-@Composable
-private fun SettingsContent(vm: AppViewModel, openLogs: () -> Unit) {
     val prefs by vm.prefsData.collectAsStateWithLifecycle()
     val local = prefs.services.firstOrNull { it.id == DEFAULT_SERVICE_ID }
     val advanced = prefs.advancedMode
@@ -115,8 +109,7 @@ private fun SettingsContent(vm: AppViewModel, openLogs: () -> Unit) {
     }
     val secondary: @Composable ColumnScope.() -> Unit = {
         if (!advanced && local != null) {
-            CaptchaCard(local.forceManualCaptcha) { vm.updateForceManualCaptcha(local.id, it) }
-            LocalServiceCard(vm, local, openLogs)
+            LocalServiceCard(vm, local)
         }
         BackupCard(vm, prefs)
         AboutCard()
@@ -181,24 +174,10 @@ private fun GeneralCard(vm: AppViewModel, prefs: AppPreferencesData) {
     }
 }
 
-@Composable
-private fun CaptchaCard(forceManual: Boolean, onForceManual: (Boolean) -> Unit) {
-    SectionCard(title = stringResource(Res.string.settings_captcha), icon = Icons.Default.Security) {
-        Text(
-            stringResource(Res.string.settings_captcha_hint),
-            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        SwitchRow(
-            stringResource(Res.string.settings_force_manual), forceManual, onForceManual,
-            stringResource(Res.string.settings_force_manual_hint),
-        )
-    }
-}
-
 /** The on-device service in simple mode: state, release and the controls that would otherwise live in Services. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LocalServiceCard(vm: AppViewModel, svc: ServiceConfig, openLogs: () -> Unit) {
+private fun LocalServiceCard(vm: AppViewModel, svc: ServiceConfig) {
     val status = rememberServiceStatus(vm, svc)
     val connection by vm.connection.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -209,21 +188,23 @@ private fun LocalServiceCard(vm: AppViewModel, svc: ServiceConfig, openLogs: () 
         title = stringResource(Res.string.settings_service_section), icon = Icons.Default.Hub,
         action = { StatusBadge(status.kind, status.label) },
     ) {
-        InfoRow(stringResource(Res.string.settings_release), if (customCore) stringResource(Res.string.service_custom_core) else coreVersion)
+        InfoRow(stringResource(Res.string.settings_version), if (customCore) stringResource(Res.string.service_custom_core) else coreVersion)
         if (customCore) InfoRow(stringResource(Res.string.settings_core_file), svc.customCorePath.substringAfterLast('/'), mono = true)
-        Text(
-            if (customCore) stringResource(Res.string.settings_version_checks_off) else stringResource(Res.string.settings_needs_min, MIN_CORE_VERSION),
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        else if (!isSupportedCore(coreVersion)) WarningText(stringResource(Res.string.settings_needs_min, MIN_CORE_VERSION))
         download?.let { DownloadBar(it, stringResource(Res.string.download_version, it.version)) }
+        SwitchRow(
+            stringResource(Res.string.settings_force_manual), svc.forceManualCaptcha, { vm.updateForceManualCaptcha(svc.id, it) },
+            stringResource(Res.string.settings_force_manual_hint),
+        )
+        SwitchRow(
+            stringResource(Res.string.settings_verbose), svc.verbose, { vm.updateVerbose(svc.id, it) },
+            stringResource(Res.string.settings_verbose_hint),
+        )
         (connection as? ConnectionState.Failed)?.let { ErrorBanner(it.message) }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             FilledTonalButton(onClick = { vm.restartLocalService(svc.id) }) {
                 Icon(Icons.Default.Refresh, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
                 Text(stringResource(Res.string.action_restart))
-            }
-            OutlinedButton(onClick = openLogs, enabled = connection is ConnectionState.Connected) {
-                Text(stringResource(Res.string.settings_logs))
             }
             CustomCoreButtons(svc.id, svc.customCorePath) { path -> scope.launch { vm.saveService(svc.copy(customCorePath = path)) } }
         }
@@ -335,10 +316,10 @@ private fun UpdateRow(
                     },
                     style = MaterialTheme.typography.bodySmall, color = accent,
                 )
-                if (newVersion != null && hint != null) Text(hint, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
             }
             if (newVersion != null && busy == null) actions()
         }
+        if (newVersion != null && hint != null) WarningText(hint)
         if (newVersion != null) busy?.invoke()
     }
 }

@@ -17,8 +17,8 @@
     <string name="notification_action_update">Обновить</string>
     <string name="notification_action_later">Позже</string>
 
-    <string name="notification_status_app_name">Turnable</string>
-    <string name="notification_status_running">Сервис работает, клиентов пока нет</string>
+    <string name="notification_status_title">Сервис работает</string>
+    <string name="notification_status_running">Клиентов пока нет</string>
     <string name="notification_action_disconnect_all">Отключить все</string>
 
     <plurals name="notification_status_count">

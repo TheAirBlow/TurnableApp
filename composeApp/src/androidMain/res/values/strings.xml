@@ -17,8 +17,8 @@
     <string name="notification_action_update">Update</string>
     <string name="notification_action_later">Later</string>
 
-    <string name="notification_status_app_name">Turnable</string>
-    <string name="notification_status_running">Service running, no clients yet</string>
+    <string name="notification_status_title">Service running</string>
+    <string name="notification_status_running">No clients yet</string>
     <string name="notification_action_disconnect_all">Disconnect all</string>
 
     <plurals name="notification_status_count">

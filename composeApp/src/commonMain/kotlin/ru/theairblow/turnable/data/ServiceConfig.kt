@@ -31,6 +31,8 @@ data class ServiceConfig(
     val customCorePath: String = "",
     /** Skips automatic captcha solving, so every connection asks for a manual solve. */
     val forceManualCaptcha: Boolean = false,
+    /** Runs the service with debug logging. */
+    val verbose: Boolean = false,
 )
 
 /** The on-device service that simple mode runs; created on first launch. */

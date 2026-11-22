@@ -5,6 +5,7 @@
     <string name="tab_services">Сервисы</string>
     <string name="tab_servers">Серверы</string>
     <string name="tab_providers">Провайдеры</string>
+    <string name="tab_logs">Логи</string>
     <string name="tab_settings">Настройки</string>
 
     <!-- Common actions -->
@@ -254,7 +255,7 @@
     <string name="logs_copy_shown">Копировать показанные строки</string>
     <string name="logs_clear">Очистить</string>
     <string name="logs_jump_latest">К последним строкам</string>
-    <string name="logs_search_hint">Поиск по сообщениям и атрибутам</string>
+    <string name="logs_search_hint">Поиск по логам</string>
     <string name="logs_clear_search">Очистить поиск</string>
     <string name="logs_level_all">Все</string>
     <string name="logs_level_debug">Отладка</string>
@@ -264,6 +265,8 @@
     <string name="logs_waiting">Ожидание логов</string>
     <string name="logs_nothing_matches">Ничего не найдено</string>
     <string name="logs_copy_label">Логи</string>
+    <string name="logs_verbose">Подробно</string>
+    <string name="logs_verbose_hint">Отладочные логи. Перезапускает сервис</string>
 
     <!-- Providers -->
     <string name="providers_title">Провайдеры</string>
@@ -437,6 +440,11 @@
     <string name="service_captcha_section">Капча</string>
     <string name="service_force_manual">Всегда решать капчу вручную</string>
     <string name="service_force_manual_hint">Пропускает автоматическую попытку для всех клиентов этого сервиса</string>
+    <string name="service_logging">Логирование</string>
+    <string name="service_logging_verbose">Подробное</string>
+    <string name="service_logging_normal">Обычное</string>
+    <string name="service_verbose">Подробные логи</string>
+    <string name="service_verbose_hint">Добавляет отладочные строки в логи сервиса</string>
     <string name="service_address_section">Адрес</string>
     <string name="service_host_field">Хост</string>
     <string name="service_port_field">Порт</string>
@@ -479,10 +487,10 @@
     <string name="settings_theme_system">Системная</string>
     <string name="settings_theme_light">Светлая</string>
     <string name="settings_theme_dark">Тёмная</string>
-    <string name="settings_captcha">Капча</string>
-    <string name="settings_captcha_hint">Turnable пытается решить капчу платформы сам. Если не получается, он уведомляет вас, и вы решаете её на странице, которая уже заполнена.</string>
     <string name="settings_force_manual">Всегда решать капчу вручную</string>
     <string name="settings_force_manual_hint">Пропускает автоматическую попытку. При изменении перезапускает сервис</string>
+    <string name="settings_verbose">Подробные логи</string>
+    <string name="settings_verbose_hint">Добавляет отладочные строки в логи сервиса. При изменении перезапускает сервис</string>
     <string name="settings_general">Основное</string>
     <string name="settings_advanced_mode">Расширенный режим</string>
     <string name="settings_advanced_mode_hint">Добавляет вкладки для управления сервисами, серверами и провайдерами. Без него Turnable работает просто как клиент</string>
@@ -501,11 +509,8 @@
     <string name="settings_service_protocol">Протокол сервиса</string>
     <string name="settings_user_agent">User agent</string>
     <string name="settings_service_section">Сервис</string>
-    <string name="settings_release">Релиз</string>
     <string name="settings_core_file">Файл ядра</string>
     <string name="settings_needs_min">Требуется %1$s или новее.</string>
-    <string name="settings_version_checks_off">Проверки версии отключены.</string>
-    <string name="settings_logs">Логи</string>
 
     <!-- Updates -->
     <string name="update_title">Обновления</string>

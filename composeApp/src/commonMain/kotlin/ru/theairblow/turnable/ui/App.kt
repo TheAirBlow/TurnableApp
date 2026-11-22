@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Inventory2
@@ -59,7 +61,8 @@ import ru.theairblow.turnable.ui.screens.CaptchaScreen
 import ru.theairblow.turnable.ui.screens.ClientsScreen
 import ru.theairblow.turnable.ui.screens.ServersScreen
 import androidx.compose.material3.Surface
-import ru.theairblow.turnable.ui.util.PlatformBackHandler
+import ru.theairblow.turnable.ui.screens.LogsScreen
+import ru.theairblow.turnable.ui.util.PredictiveBack
 import ru.theairblow.turnable.ui.screens.ProvidersScreen
 import ru.theairblow.turnable.ui.screens.ServicesScreen
 import ru.theairblow.turnable.ui.screens.SettingsScreen
@@ -67,11 +70,15 @@ import ru.theairblow.turnable.ui.theme.TurnableTheme
 import ru.theairblow.turnable.viewmodel.AppViewModel
 import turnable.composeapp.generated.resources.*
 
-enum class AppTab(val label: StringResource, val icon: ImageVector, val selectedIcon: ImageVector, val advancedOnly: Boolean = false) {
+enum class AppTab(
+    val label: StringResource, val icon: ImageVector, val selectedIcon: ImageVector,
+    val advancedOnly: Boolean = false, val plainOnly: Boolean = false,
+) {
     CLIENTS(Res.string.tab_clients, Icons.Outlined.SettingsEthernet, Icons.Filled.SettingsEthernet),
     SERVICES(Res.string.tab_services, Icons.Outlined.Hub, Icons.Filled.Hub, advancedOnly = true),
     SERVERS(Res.string.tab_servers, Icons.Outlined.Dns, Icons.Filled.Dns, advancedOnly = true),
     PROVIDERS(Res.string.tab_providers, Icons.Outlined.Inventory2, Icons.Filled.Inventory2, advancedOnly = true),
+    LOGS(Res.string.tab_logs, Icons.AutoMirrored.Outlined.Article, Icons.AutoMirrored.Filled.Article, plainOnly = true),
     SETTINGS(Res.string.tab_settings, Icons.Outlined.Settings, Icons.Filled.Settings),
 }
 
@@ -83,7 +90,7 @@ fun App(viewModel: AppViewModel) {
         ThemeMode.LIGHT -> false
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    val tabs = AppTab.entries.filter { prefs.advancedMode || !it.advancedOnly }
+    val tabs = AppTab.entries.filter { if (prefs.advancedMode) !it.plainOnly else !it.advancedOnly }
     var selected by rememberSaveable { mutableStateOf(AppTab.CLIENTS) }
     // Turning advanced mode off while on one of its tabs falls back to the client list
     val tab = selected.takeIf { it in tabs } ?: AppTab.CLIENTS
@@ -141,9 +148,10 @@ fun App(viewModel: AppViewModel) {
                     }
                 }
                 captchas.firstOrNull { it.instanceId == captchaId }?.let { request ->
-                    PlatformBackHandler(enabled = true, onBack = viewModel::closeCaptcha)
-                    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-                        CaptchaScreen(request, onSolved = { viewModel.captchaSolved(request.instanceId) }, onClose = viewModel::closeCaptcha)
+                    PredictiveBack(onBack = viewModel::closeCaptcha, modifier = Modifier.fillMaxSize()) {
+                        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
+                            CaptchaScreen(request, onSolved = { viewModel.captchaSolved(request.instanceId) }, onClose = viewModel::closeCaptcha)
+                        }
                     }
                 }
             }
@@ -157,5 +165,6 @@ private fun TabContent(tab: AppTab, vm: AppViewModel, openServices: () -> Unit) 
     AppTab.SERVERS -> ServersScreen(vm, openServices)
     AppTab.CLIENTS -> ClientsScreen(vm, openServices)
     AppTab.PROVIDERS -> ProvidersScreen(vm, openServices)
+    AppTab.LOGS -> LogsScreen(vm)
     AppTab.SETTINGS -> SettingsScreen(vm)
 }

@@ -54,6 +54,6 @@ private suspend fun fetchLatestAppRelease(): AppUpdate? {
         }
 }
 
-/** The latest app release when it is newer than [APP_VERSION], otherwise null. */
+/** The latest app release when it is newer than [APP_VERSION], otherwise null; dev builds never check. */
 suspend fun fetchAppUpdate(): AppUpdate? =
-    fetchLatestAppRelease()?.takeIf { compareVersions(it.version, APP_VERSION) > 0 }
+    if (IS_DEV_BUILD) null else fetchLatestAppRelease()?.takeIf { compareVersions(it.version, APP_VERSION) > 0 }

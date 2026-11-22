@@ -698,7 +698,7 @@ class AppViewModel(
         viewModelScope.launch {
             _localStarting.update { it + serviceId }
             try {
-                localHost.start(svc.id, if (svc.customCorePath.isBlank()) resolveVersion(svc) else "", localEnv(svc), svc.customCorePath)
+                localHost.start(svc.id, if (svc.customCorePath.isBlank()) resolveVersion(svc) else "", localEnv(svc), svc.customCorePath, svc.verbose)
                 if (prefsData.value.selectedServiceId == serviceId) connect(serviceId)
             } catch (e: CancellationException) {
                 throw e
@@ -932,11 +932,21 @@ class AppViewModel(
         viewModelScope.launch { prefs.update { it.copy(advancedMode = value) } }
     }
 
-    /** Simple mode edits the on-device service's captcha behavior through the settings screen. */
-    fun updateForceManualCaptcha(serviceId: String, value: Boolean) {
+    /** Simple mode edits the on-device service through the settings screen. */
+    fun updateForceManualCaptcha(serviceId: String, value: Boolean) = updateService(serviceId) {
+        if (it.forceManualCaptcha != value) it.copy(forceManualCaptcha = value) else it
+    }
+
+    /** Saving restarts a running service, so the new log level applies at once. */
+    fun updateVerbose(serviceId: String, value: Boolean) = updateService(serviceId) {
+        if (it.verbose != value) it.copy(verbose = value) else it
+    }
+
+    private fun updateService(serviceId: String, change: (ServiceConfig) -> ServiceConfig) {
         viewModelScope.launch {
             val svc = prefsData.value.services.firstOrNull { it.id == serviceId } ?: return@launch
-            if (svc.forceManualCaptcha != value) saveService(svc.copy(forceManualCaptcha = value))
+            val updated = change(svc)
+            if (updated != svc) saveService(updated)
         }
     }
 

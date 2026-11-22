@@ -86,6 +86,7 @@ data class StatusColors(
     val onlineContainer: Color,
     val pending: Color,
     val pendingContainer: Color,
+    val warning: Color,
     val logBackground: Color,
     val logText: Color,
     val logMuted: Color,
@@ -98,13 +99,14 @@ data class StatusColors(
 private val LightStatus = StatusColors(
     online = Color(0xFF1B8A4B), onlineContainer = Color(0xFFD3F5DF),
     pending = Color(0xFFB26A00), pendingContainer = Color(0xFFFFE8C7),
+    warning = Color(0xFF9A6700),
     logBackground = Color(0xFF14161D), logText = Color(0xFFE1E3EC), logMuted = Color(0xFF7D8191),
     logDebug = Color(0xFF8E93A6), logInfo = Color(0xFF6FD3A3), logWarn = Color(0xFFF5C26B), logError = Color(0xFFFF8A80),
 )
 
 private val DarkStatus = LightStatus.copy(
     online = Color(0xFF6FD3A3), onlineContainer = Color(0xFF0E3B25),
-    pending = Color(0xFFF5C26B), pendingContainer = Color(0xFF3F2C07),
+    pending = Color(0xFFF5C26B), pendingContainer = Color(0xFF3F2C07), warning = Color(0xFFF5C26B),
     logBackground = Color(0xFF0A0C11),
 )
 

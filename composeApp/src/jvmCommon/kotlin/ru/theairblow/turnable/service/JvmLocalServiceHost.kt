@@ -76,7 +76,7 @@ open class JvmLocalServiceHost(private val baseDir: File, private val assetName:
     private fun serviceDir(id: String) = File(baseDir, "services/$id")
     private fun outputFile(id: String) = File(serviceDir(id), "output.log")
 
-    override suspend fun start(id: String, version: String, env: Map<String, String>, customBinary: String) = withContext(Dispatchers.IO) {
+    override suspend fun start(id: String, version: String, env: Map<String, String>, customBinary: String, verbose: Boolean) = withContext(Dispatchers.IO) {
         stop(id)
         val binary = if (customBinary.isBlank()) ensureBinary(version) else File(customBinary).also {
             if (!it.isFile) throw IOException("Custom core not found: $customBinary")
@@ -89,7 +89,7 @@ open class JvmLocalServiceHost(private val baseDir: File, private val assetName:
         config.writeText(json.encodeToString(ServiceJson.serializer(), ServiceJson(socket.absolutePath, persist.absolutePath)))
 
         // Output goes to a file: an undrained pipe would eventually block the service on write
-        val process = ProcessBuilder(binary.absolutePath, "service", "server", "-c", config.absolutePath)
+        val process = ProcessBuilder(listOfNotNull(binary.absolutePath, "service", "server", "-c", config.absolutePath, "-V".takeIf { verbose }))
             .directory(dir)
             .redirectErrorStream(true)
             .redirectOutput(outputFile(id))

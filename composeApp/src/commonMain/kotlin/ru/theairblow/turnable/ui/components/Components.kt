@@ -36,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -67,6 +68,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.semantics.Role
@@ -80,7 +82,7 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.ui.theme.MonoFamily
 import ru.theairblow.turnable.ui.theme.TurnableTheme
-import ru.theairblow.turnable.ui.util.PlatformBackHandler
+import ru.theairblow.turnable.ui.util.PredictiveBack
 import turnable.composeapp.generated.resources.*
 
 /** Shows a transient message (snackbar). Provided by the app root. */
@@ -210,7 +212,6 @@ fun <K : Any> AdaptiveListDetail(
                 }
             }
         } else {
-            PlatformBackHandler(enabled = detailKey != null, onBack = onCloseDetail)
             // The list stays composed under the detail so it keeps its scroll position
             Box(Modifier.fillMaxSize()) {
                 list()
@@ -228,7 +229,9 @@ fun <K : Any> AdaptiveListDetail(
                     },
                     label = "listDetail",
                 ) { key ->
-                    if (key != null) Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) { detail(key) }
+                    if (key != null) PredictiveBack(onBack = onCloseDetail, modifier = Modifier.fillMaxSize()) {
+                        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) { detail(key) }
+                    }
                 }
             }
         }
@@ -270,18 +273,22 @@ fun ListCard(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     selected: Boolean = false,
+    shape: Shape = MaterialTheme.shapes.large,
+    color: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    verticalPadding: Dp = 14.dp,
+    leadingGap: Dp = 14.dp,
     leading: @Composable () -> Unit = {},
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = shape,
+        color = if (selected) MaterialTheme.colorScheme.secondaryContainer else color,
     ) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = verticalPadding), verticalAlignment = Alignment.CenterVertically) {
             leading()
-            Column(Modifier.weight(1f).padding(start = 14.dp)) {
+            Column(Modifier.weight(1f).padding(start = leadingGap)) {
                 Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (subtitle != null) Text(
                     subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -290,6 +297,16 @@ fun ListCard(
             }
             trailing()
         }
+    }
+}
+
+/** A yellow warning icon with [text] beside it. */
+@Composable
+fun WarningText(text: String, modifier: Modifier = Modifier) {
+    val color = TurnableTheme.status.warning
+    Row(modifier, verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Icon(Icons.Default.Warning, null, Modifier.size(18.dp), tint = color)
+        Text(text, style = MaterialTheme.typography.bodySmall, color = color)
     }
 }
 

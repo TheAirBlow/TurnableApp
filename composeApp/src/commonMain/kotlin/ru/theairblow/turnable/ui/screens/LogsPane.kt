@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,14 +20,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.KeyboardDoubleArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -33,12 +38,13 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -46,10 +52,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import ru.theairblow.turnable.ui.util.PlatformBackHandler
+import ru.theairblow.turnable.ui.util.PredictiveBack
+import ru.theairblow.turnable.data.DEFAULT_SERVICE_ID
 import ru.theairblow.turnable.ui.components.EmptyState
 import ru.theairblow.turnable.ui.components.PaneTopBar
 import ru.theairblow.turnable.ui.components.rememberCopier
@@ -78,9 +86,13 @@ private fun LogEntry.toPlainLine(levelName: (LogLevel) -> String): String =
 
 /**
  * Live service logs. With [instanceId] only lines tagged with that instance (server_id / client_id) are shown.
+ * A non-null [verbose] adds a chip that flips the service's debug logging through [onVerbose].
  */
 @Composable
-fun LogsPane(vm: AppViewModel, title: String, onBack: () -> Unit, instanceId: String? = null) {
+fun LogsPane(
+    vm: AppViewModel, title: String, onBack: (() -> Unit)? = null, instanceId: String? = null,
+    verbose: Boolean? = null, onVerbose: (Boolean) -> Unit = {},
+) {
     val logs by vm.logs.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
     var minLevel by remember { mutableStateOf(LogLevel.DEBUG) }
@@ -89,7 +101,6 @@ fun LogsPane(vm: AppViewModel, title: String, onBack: () -> Unit, instanceId: St
     val copy = rememberCopier()
     val levelNames = LogLevel.entries.associateWith { stringResource(it.label) }
     val copyLabel = stringResource(Res.string.logs_copy_label)
-    PlatformBackHandler(onBack = onBack)
 
     val shown = remember(logs, query, minLevel, instanceId) {
         logs.filter { e ->
@@ -98,17 +109,16 @@ fun LogsPane(vm: AppViewModel, title: String, onBack: () -> Unit, instanceId: St
                 (query.isBlank() || e.message.contains(query, true) || e.attrs.any { it.value.contains(query, true) })
         }
     }
-    // Follow new lines only while the user is already at the bottom
-    val atBottom by remember {
-        derivedStateOf {
-            val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
-            last >= listState.layoutInfo.totalItemsCount - 2
-        }
+    // Pinned to the bottom until the user scrolls away; new lines must not unpin it
+    var atBottom by remember { mutableStateOf(true) }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }.filter { !it }.collect { atBottom = !listState.canScrollForward }
     }
     LaunchedEffect(shown.size) {
         if (shown.isNotEmpty() && atBottom) listState.scrollToItem(shown.lastIndex)
     }
 
+    PredictiveBack(enabled = onBack != null, onBack = { onBack?.invoke() }, modifier = Modifier.fillMaxSize()) {
     Scaffold(
         topBar = {
             PaneTopBar(title, stringResource(Res.string.logs_lines, shown.size, logs.size), onBack = onBack) {
@@ -148,7 +158,21 @@ fun LogsPane(vm: AppViewModel, title: String, onBack: () -> Unit, instanceId: St
             Row(
                 Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                if (verbose != null) {
+                    FilterChip(
+                        selected = verbose, onClick = { onVerbose(!verbose) },
+                        label = { Text(stringResource(Res.string.logs_verbose)) },
+                        leadingIcon = { Icon(Icons.Default.BugReport, stringResource(Res.string.logs_verbose_hint), Modifier.size(FilterChipDefaults.IconSize)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            selectedLeadingIconColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        ),
+                    )
+                    VerticalDivider(Modifier.height(20.dp))
+                }
                 LogLevel.entries.forEach { level ->
                     FilterChip(
                         selected = minLevel == level, onClick = { minLevel = level },
@@ -181,6 +205,18 @@ fun LogsPane(vm: AppViewModel, title: String, onBack: () -> Unit, instanceId: St
             }
         }
     }
+    }
+}
+
+/** The on-device service's logs as a tab of their own, for simple mode. */
+@Composable
+fun LogsScreen(vm: AppViewModel) {
+    val prefs by vm.prefsData.collectAsStateWithLifecycle()
+    val local = prefs.services.firstOrNull { it.id == DEFAULT_SERVICE_ID }
+    LogsPane(
+        vm, title = stringResource(Res.string.services_service_logs),
+        verbose = local?.verbose, onVerbose = { local?.let { svc -> vm.updateVerbose(svc.id, it) } },
+    )
 }
 
 @Composable

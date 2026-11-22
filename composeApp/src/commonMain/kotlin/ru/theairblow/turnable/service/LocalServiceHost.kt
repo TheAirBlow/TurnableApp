@@ -28,8 +28,9 @@ interface LocalServiceHost {
     /**
      * Downloads [version] if needed and starts the service, returning once its socket is ready. Throws on failure.
      * [env] is added to the process environment. A non-blank [customBinary] runs that file instead of a release.
+     * [verbose] turns on the service's debug logging.
      */
-    suspend fun start(id: String, version: String, env: Map<String, String> = emptyMap(), customBinary: String = "")
+    suspend fun start(id: String, version: String, env: Map<String, String> = emptyMap(), customBinary: String = "", verbose: Boolean = false)
 
     suspend fun stop(id: String)
 
