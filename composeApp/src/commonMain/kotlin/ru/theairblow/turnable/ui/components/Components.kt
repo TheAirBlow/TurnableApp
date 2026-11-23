@@ -1,6 +1,7 @@
 package ru.theairblow.turnable.ui.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -58,6 +59,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,6 +69,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -82,7 +87,10 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.ui.theme.MonoFamily
 import ru.theairblow.turnable.ui.theme.TurnableTheme
+import ru.theairblow.turnable.ui.util.PANE_OPEN_MS
 import ru.theairblow.turnable.ui.util.PredictiveBack
+import ru.theairblow.turnable.ui.util.paneParallax
+import ru.theairblow.turnable.ui.util.paneTransition
 import turnable.composeapp.generated.resources.*
 
 /** Shows a transient message (snackbar). Provided by the app root. */
@@ -172,7 +180,7 @@ fun PaneTopBar(
                     Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (subtitle != null) Text(
                         subtitle, style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     )
                 }
             },
@@ -198,6 +206,8 @@ fun <K : Any> AdaptiveListDetail(
     onCloseDetail: () -> Unit,
     list: @Composable () -> Unit,
     placeholder: @Composable () -> Unit,
+    /** The pane [detail] sits on top of, which stays in place underneath it. */
+    parent: (K) -> K? = { null },
     detail: @Composable (K) -> Unit,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -212,31 +222,34 @@ fun <K : Any> AdaptiveListDetail(
                 }
             }
         } else {
-            // The list stays composed under the detail so it keeps its scroll position
+            // Every pane of the stack stays composed under the ones above it, so going back reveals it in place
+            val stack = remember(detailKey) { generateSequence(detailKey) { parent(it) }.toList().asReversed() }
+            var back by remember { mutableFloatStateOf(0f) }
+            // A committed back swipe leaves its progress behind until the exit animation is done
+            LaunchedEffect(stack.size) { delay(PANE_OPEN_MS + 100L); back = 0f }
             Box(Modifier.fillMaxSize()) {
-                list()
-                AnimatedContent(
-                    detailKey,
-                    transitionSpec = {
-                        val opening = targetState != null
-                        val transition = if (opening) {
-                            (slideInHorizontally(tween(280)) { it / 3 } + fadeIn(tween(280))) togetherWith fadeOut(tween(200))
-                        } else {
-                            fadeIn(tween(1)) togetherWith (slideOutHorizontally(tween(280)) { it / 3 } + fadeOut(tween(220)))
+                Box(Modifier.fillMaxSize().paneParallax(stack.isNotEmpty()) { back }) { list() }
+                repeat(MAX_PANES) { level ->
+                    val key = stack.getOrNull(level)
+                    AnimatedContent(
+                        key, Modifier.fillMaxSize().paneParallax(stack.size > level + 1) { back },
+                        transitionSpec = { paneTransition(initialState != null, targetState != null) },
+                        label = "pane$level",
+                    ) { k ->
+                        if (k != null) PredictiveBack(
+                            enabled = level == stack.lastIndex, onBack = onCloseDetail, modifier = Modifier.fillMaxSize(),
+                            onProgress = { back = it },
+                        ) {
+                            Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) { detail(k) }
                         }
-                        // The incoming detail draws above the list; the outgoing one stays above while it slides away
-                        transition.apply { targetContentZIndex = if (opening) 1f else 0f }
-                    },
-                    label = "listDetail",
-                ) { key ->
-                    if (key != null) PredictiveBack(onBack = onCloseDetail, modifier = Modifier.fillMaxSize()) {
-                        Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) { detail(key) }
                     }
                 }
             }
         }
     }
 }
+
+private const val MAX_PANES = 3
 
 /** A rounded, tonal container with an optional header row. */
 @Composable
@@ -363,10 +376,10 @@ fun ErrorBanner(message: String, modifier: Modifier = Modifier, onDismiss: (() -
 fun InfoRow(label: String, value: String, mono: Boolean = false, copyable: Boolean = false) {
     val copy = rememberCopier()
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(0.38f))
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(end = 12.dp), maxLines = 1)
         Text(
             value, style = MaterialTheme.typography.bodyMedium, fontFamily = if (mono) MonoFamily else null,
-            modifier = Modifier.weight(0.62f), maxLines = 2, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.End,
         )
         if (copyable) IconButton(onClick = { copy(value, label) }, Modifier.size(32.dp)) {
@@ -436,7 +449,7 @@ fun TextInput(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
+        label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         modifier = modifier.fillMaxWidth(),
         singleLine = singleLine,
         minLines = minLines,

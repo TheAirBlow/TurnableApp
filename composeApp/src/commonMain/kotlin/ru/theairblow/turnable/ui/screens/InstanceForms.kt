@@ -2,6 +2,8 @@ package ru.theairblow.turnable.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -53,10 +56,12 @@ import ru.theairblow.turnable.config.ConfigJson
 import ru.theairblow.turnable.config.MissingField
 import ru.theairblow.turnable.config.RelayServerConfig
 import ru.theairblow.turnable.config.configDisplayName
+import ru.theairblow.turnable.config.parseClientConfig
 import ru.theairblow.turnable.config.missingFields
 import ru.theairblow.turnable.config.splitConfigs
 import ru.theairblow.turnable.proto.StartClientRequest
 import ru.theairblow.turnable.proto.StartServerRequest
+import ru.theairblow.turnable.proto.InstanceInfo
 import ru.theairblow.turnable.service.generateServiceKeyPair
 import ru.theairblow.turnable.subscription.listenAddrsFor
 import ru.theairblow.turnable.subscription.suggestedPorts
@@ -69,8 +74,6 @@ import ru.theairblow.turnable.ui.components.SwitchRow
 import ru.theairblow.turnable.ui.components.TextInput
 import ru.theairblow.turnable.ui.components.rememberClipboardReader
 import ru.theairblow.turnable.ui.theme.TurnableTheme
-import ru.theairblow.turnable.ui.util.describeProto
-import ru.theairblow.turnable.ui.util.describeTransport
 import ru.theairblow.turnable.viewmodel.AppViewModel
 import turnable.composeapp.generated.resources.*
 import kotlin.io.encoding.Base64
@@ -94,12 +97,11 @@ private fun InstanceIdentityFields(
     name: String, onName: (String) -> Unit,
     id: String, onId: (String) -> Unit,
     autostart: Boolean, onAutostart: (Boolean) -> Unit,
-    nameHint: String,
 ) {
-    TextInput(name, onName, stringResource(Res.string.form_name), supporting = nameHint)
+    TextInput(name, onName, stringResource(Res.string.form_name))
     TextInput(
         id, { onId(it.filterNot { c -> c == '/' || c == '\\' }) }, stringResource(Res.string.form_instance_id),
-        mono = true, supporting = stringResource(Res.string.form_instance_id_hint),
+        mono = true,
     )
     SwitchRow(
         stringResource(Res.string.form_autostart), autostart, onAutostart,
@@ -119,20 +121,34 @@ private fun MissingField.labelRes(): StringResource = when (this) {
     MissingField.KEY_PAIR -> Res.string.missing_key_pair
 }
 
-/** Neutral note listing required fields that are still empty. */
+/** Scrolling form body with a fixed note under the top bar. */
 @Composable
-private fun MissingHint(missing: List<MissingField>) {
-    if (missing.isEmpty()) return
+private fun FormBody(padding: PaddingValues, note: String?, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxSize().padding(padding)) {
+        if (note != null) Surface(Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.secondaryContainer) {
+            Text(
+                note, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            )
+        }
+        Column(
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp), content = content,
+        )
+    }
+}
+
+/** Note listing required fields that are still empty, or null when none are. */
+@Composable
+private fun missingSubtitle(missing: List<MissingField>): String? {
+    if (missing.isEmpty()) return null
     val labels = missing.map { stringResource(it.labelRes()) }
-    Text(
-        stringResource(Res.string.form_still_needed, labels.joinToString(", ")),
-        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
+    return stringResource(Res.string.form_still_needed, labels.joinToString(", "))
 }
 
 /** A banner stating whether the service accepted the config. */
 @Composable
-private fun ValidationResult(valid: Boolean?, error: String?) {
+internal fun ValidationResult(valid: Boolean?, error: String?) {
     when {
         error != null -> ErrorBanner(error)
         valid == true -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -147,7 +163,7 @@ private fun ValidationResult(valid: Boolean?, error: String?) {
 
 /** Validates [config] with the service after typing pauses. */
 @Composable
-private fun rememberValidation(config: String, validate: suspend (String) -> Pair<Boolean, String>): Pair<Boolean?, String?> {
+internal fun rememberValidation(config: String, validate: suspend (String) -> Pair<Boolean, String>): Pair<Boolean?, String?> {
     var state by remember { mutableStateOf<Pair<Boolean?, String?>>(null to null) }
     LaunchedEffect(config) {
         if (config.isBlank()) { state = null to null; return@LaunchedEffect }
@@ -195,14 +211,10 @@ fun CreateServerPane(vm: AppViewModel, onClose: () -> Unit, onCreated: (String) 
             }) { Text(stringResource(Res.string.action_start)) }
         }
     }) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        FormBody(padding, missingSubtitle(missing)) {
             error?.let { ErrorBanner(it) { error = null } }
             InstanceIdentityFields(
                 name, { name = it }, instanceId, { instanceId = it }, autostart, { autostart = it },
-                stringResource(Res.string.form_server_name_hint),
             )
 
             FormSection(stringResource(Res.string.form_provider_section))
@@ -223,7 +235,6 @@ fun CreateServerPane(vm: AppViewModel, onClose: () -> Unit, onCreated: (String) 
                 raw, { raw = it }, stringResource(Res.string.form_server_config_json),
                 mono = true, singleLine = false, minLines = 8,
             )
-            MissingHint(missing)
             ValidationResult(valid, validationError)
             Spacer(Modifier.height(24.dp))
         }
@@ -234,8 +245,7 @@ fun CreateServerPane(vm: AppViewModel, onClose: () -> Unit, onCreated: (String) 
 private fun ServerConfigFields(c: RelayServerConfig, onChange: (RelayServerConfig) -> Unit) {
     DropdownField(stringResource(Res.string.form_platform), c.platformId, Choices.platforms, { onChange(c.copy(platformId = it)) })
     TextInput(
-        c.callId, { onChange(c.copy(callId = it.trim())) }, stringResource(Res.string.form_call_id),
-        mono = true, supporting = stringResource(Res.string.form_call_id_hint),
+        c.callId, { onChange(c.copy(callId = it.trim())) }, stringResource(Res.string.form_call_id), mono = true,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         TextInput(
@@ -249,7 +259,6 @@ private fun ServerConfigFields(c: RelayServerConfig, onChange: (RelayServerConfi
     }
     DropdownField(
         stringResource(Res.string.form_protocol), c.proto, Choices.protos, { onChange(c.copy(proto = it)) },
-        hint = { describeProto(it) },
     )
     DropdownField(stringResource(Res.string.form_cloak), c.cloak, Choices.cloaks, { onChange(c.copy(cloak = it)) })
     SectionCard(title = stringResource(Res.string.form_server_key_pair), icon = Icons.Default.Key) {
@@ -329,17 +338,13 @@ fun CreateClientPane(vm: AppViewModel, onClose: () -> Unit, onCreated: (String) 
             }
         }
     }) { padding ->
-        Column(
-            Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        FormBody(padding, missingSubtitle(missing)) {
             error?.let { ErrorBanner(it) { error = null } }
             ModeSwitch(mode, stringResource(Res.string.form_mode_link_json)) { mode = it }
             if (mode == ConfigMode.RAW) {
                 TextInput(
                     raw, { raw = it }, stringResource(Res.string.client_raw_label),
                     mono = true, singleLine = false, minLines = 5,
-                    supporting = stringResource(Res.string.client_raw_hint),
                     trailing = {
                         IconButton(onClick = { raw = readClipboard() }) {
                             Icon(Icons.Default.ContentPaste, stringResource(Res.string.action_paste))
@@ -349,7 +354,6 @@ fun CreateClientPane(vm: AppViewModel, onClose: () -> Unit, onCreated: (String) 
             } else {
                 ClientConfigFields(form) { form = it }
             }
-            MissingHint(missing)
             if (!bulk) ValidationResult(valid, validationError)
 
             FormSection(stringResource(Res.string.form_instance_section))
@@ -365,14 +369,10 @@ fun CreateClientPane(vm: AppViewModel, onClose: () -> Unit, onCreated: (String) 
             } else {
                 InstanceIdentityFields(
                     name, { name = it }, instanceId, { instanceId = it }, autostart, { autostart = it },
-                    stringResource(Res.string.client_name_hint),
                 )
                 TextInput(
                     listenAddr, { listenAddr = it.trim(); addrEdited = true }, stringResource(Res.string.client_listen_address),
                     mono = true, isError = !addrOk,
-                    supporting = if (!addrEdited && suggestedPorts(config).any { it > 0 }) {
-                        stringResource(Res.string.client_listen_suggested)
-                    } else stringResource(Res.string.client_listen_hint),
                     trailing = {
                         IconButton(onClick = { listenAddr = vm.newClientListenAddr(); addrEdited = true }) {
                             Icon(Icons.Default.Shuffle, stringResource(Res.string.client_new_random_port))
@@ -390,7 +390,6 @@ private fun ClientConfigFields(c: ClientConfig, onChange: (ClientConfig) -> Unit
     val relay = c.type == "relay"
     DropdownField(
         stringResource(Res.string.client_connection_type), c.type, Choices.clientTypes, { onChange(c.copy(type = it)) },
-        hint = { if (it == "direct") stringResource(Res.string.client_type_direct_hint) else null },
     )
     DropdownField(stringResource(Res.string.form_platform), c.platformId, Choices.platforms, { onChange(c.copy(platformId = it)) })
     TextInput(c.callId, { onChange(c.copy(callId = it.trim())) }, stringResource(Res.string.form_call_id), mono = true)
@@ -411,7 +410,7 @@ private fun ClientConfigFields(c: ClientConfig, onChange: (ClientConfig) -> Unit
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             DropdownField(
                 stringResource(Res.string.form_protocol), c.proto, Choices.protos, { onChange(c.copy(proto = it)) },
-                Modifier.weight(1f), hint = { describeProto(it) },
+                Modifier.weight(1f),
             )
             DropdownField(
                 stringResource(Res.string.form_encryption), c.encryption, Choices.encryptions,
@@ -448,7 +447,6 @@ private fun ClientConfigFields(c: ClientConfig, onChange: (ClientConfig) -> Unit
                 DropdownField(
                     stringResource(Res.string.form_transport), r.transport.ifBlank { "none" }, Choices.transports,
                     { set(r.copy(transport = if (it == "none") "" else it)) }, Modifier.weight(1f),
-                    hint = { describeTransport(it) },
                 )
             }
         }
@@ -459,5 +457,79 @@ private fun ClientConfigFields(c: ClientConfig, onChange: (ClientConfig) -> Unit
     }
     if (c.routes.map { it.transport == "mpath" }.distinct().size > 1) {
         ErrorBanner(stringResource(Res.string.client_mpath_mixed))
+    }
+}
+
+private val listenAddrPattern = Regex("""^[^\s:]+:\d{1,5}$|^\[[0-9a-fA-F:]+]:\d{1,5}$""")
+
+/** Edits a client's name, config and listen addresses; a changed config or address list restarts it. */
+@Composable
+fun EditClientPane(
+    vm: AppViewModel, info: InstanceInfo, listenAddrs: List<String>, currentConfig: String,
+    onClose: () -> Unit, onSave: (name: String, addrs: List<String>, config: String?) -> Unit,
+) {
+    val original = currentConfig.trim()
+    // A JSON config opens straight in the form so the first frame is not built twice
+    val parsed = remember(original) { if (original.startsWith("{")) parseClientConfig(original) else null }
+    var mode by remember { mutableStateOf(if (parsed != null) ConfigMode.FORM else ConfigMode.RAW) }
+    var raw by remember { mutableStateOf(original) }
+    var initialForm by remember { mutableStateOf(parsed) }
+    var form by remember { mutableStateOf(parsed ?: ClientConfig()) }
+    var name by remember { mutableStateOf(info.name) }
+    var addrText by remember { mutableStateOf(listenAddrs.joinToString("\n")) }
+
+    // Links are converted to JSON by the service so the form can show them
+    LaunchedEffect(original) {
+        if (parsed != null) return@LaunchedEffect
+        val json = vm.request { convertClientConfig(original) }.getOrNull()
+        parseClientConfig(json.orEmpty())?.let { initialForm = it; form = it; mode = ConfigMode.FORM }
+    }
+
+    fun switchTo(target: ConfigMode) {
+        if (target == ConfigMode.FORM && mode == ConfigMode.RAW) parseClientConfig(raw)?.let { form = it }
+        if (target == ConfigMode.RAW && mode == ConfigMode.FORM && form != initialForm) {
+            raw = ConfigJson.encodeToString(ClientConfig.serializer(), form)
+        }
+        mode = target
+    }
+
+    val config = if (mode == ConfigMode.FORM) ConfigJson.encodeToString(ClientConfig.serializer(), form) else raw.trim()
+    val configChanged = if (mode == ConfigMode.FORM) form != initialForm else config != original
+    val missing = if (mode == ConfigMode.FORM) form.missingFields() else emptyList()
+    val (valid, validationError) = rememberValidation(if (configChanged && missing.isEmpty()) config else "") { c ->
+        vm.request { validateClientConfig(c) }.fold({ it.valid to it.error }, { false to (it.message ?: "") })
+    }
+    val addrs = addrText.lines().map { it.trim() }.filter { it.isNotEmpty() }
+    val addrsChanged = addrs != listenAddrs
+    val addrsValid = addrs.all { listenAddrPattern.matches(it) && it.substringAfterLast(':').toInt() in 0..65535 }
+    val canSave = name.isNotBlank() && addrsValid && missing.isEmpty() && (!configChanged || valid == true) &&
+        (name != info.name || addrsChanged || configChanged)
+
+    Scaffold(topBar = {
+        PaneTopBar(stringResource(Res.string.instance_edit_title, info.displayName), onBack = onClose) {
+            TextButton(enabled = canSave, onClick = {
+                // A new config restarts the client, so the addresses are passed along to keep them
+                onSave(name.trim(), if (addrsChanged || configChanged) addrs else emptyList(), if (configChanged) config else null)
+            }) { Text(stringResource(Res.string.action_save)) }
+        }
+    }) { padding ->
+        FormBody(padding, missingSubtitle(missing)) {
+            ModeSwitch(mode, stringResource(Res.string.form_mode_link_json), ::switchTo)
+            if (mode == ConfigMode.RAW) {
+                TextInput(raw, { raw = it }, stringResource(Res.string.client_raw_label), mono = true, singleLine = false, minLines = 5)
+            } else {
+                ClientConfigFields(form) { form = it }
+            }
+            if (configChanged) ValidationResult(valid, validationError)
+
+            FormSection(stringResource(Res.string.form_instance_section))
+            TextInput(name, { name = it }, stringResource(Res.string.form_name), isError = name.isBlank())
+            TextInput(
+                addrText, { addrText = it }, stringResource(Res.string.instance_listen_addresses),
+                mono = true, singleLine = false, minLines = 2, isError = !addrsValid,
+                supporting = if (!addrsValid) stringResource(Res.string.instance_listen_error) else null,
+            )
+            Spacer(Modifier.height(24.dp))
+        }
     }
 }

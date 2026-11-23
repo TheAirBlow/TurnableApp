@@ -603,6 +603,16 @@ class AppViewModel(
         refresh()
     }
 
+    /** Pins a subscription client's local edits so later updates leave them alone. */
+    suspend fun markEntryEdited(instanceId: String) {
+        prefs.update { d ->
+            d.copy(subscriptions = d.subscriptions.map { s ->
+                if (s.entries.none { it.instanceId == instanceId }) s
+                else s.copy(entries = s.entries.map { if (it.instanceId == instanceId) it.copy(edited = true) else it })
+            })
+        }
+    }
+
     /** The subscription whose group client [instanceId] belongs to. */
     fun subscriptionOf(instanceId: String): Subscription? =
         prefsData.value.subscriptions.firstOrNull { s -> s.entries.any { it.instanceId == instanceId } }
@@ -623,12 +633,13 @@ class AppViewModel(
                 val taken = takenPorts().toMutableSet()
                 val failures = mutableListOf<String>()
                 val entries = fetched.links.map { link ->
-                    val entry = old[link.key]?.copy(name = link.name)
+                    val entry = old[link.key]?.let { if (it.edited) it else it.copy(name = link.name) }
                         ?: SubscriptionEntry(link.key, "sub-${sub.id}-${link.key.hashCode().toUInt().toString(16)}", randomLocalPort(taken), link.name)
                     taken += entry.port until entry.port + PORTS_PER_ENTRY
                     val addrs = link.listenAddrs(entry.port)
                     val current = if (entry.instanceId in live) request { getInstance(entry.instanceId) }.getOrNull() else null
                     val outcome = when {
+                        entry.edited && current != null -> null
                         current == null ->
                             request { addClientStopped(StartClientRequest(link.url, addrs, entry.instanceId, entry.name)) }
                         current.config.trim() != link.url ->

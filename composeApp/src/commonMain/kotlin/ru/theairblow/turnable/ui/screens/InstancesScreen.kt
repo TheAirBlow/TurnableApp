@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
@@ -57,6 +57,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
@@ -64,6 +65,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.config.prettyJson
 import ru.theairblow.turnable.proto.GetInstanceResponse
+import ru.theairblow.turnable.config.parseClientConfig
 import ru.theairblow.turnable.proto.InstanceInfo
 import ru.theairblow.turnable.proto.InstanceStatus
 import ru.theairblow.turnable.proto.InstanceType
@@ -78,6 +80,8 @@ import ru.theairblow.turnable.ui.components.ListCard
 import ru.theairblow.turnable.ui.components.PaneTopBar
 import ru.theairblow.turnable.ui.components.SectionCard
 import ru.theairblow.turnable.ui.components.StatusBadge
+import ru.theairblow.turnable.ui.components.StatusDot
+import ru.theairblow.turnable.ui.components.color
 import ru.theairblow.turnable.ui.components.SwitchRow
 import ru.theairblow.turnable.ui.components.TextInput
 import ru.theairblow.turnable.ui.components.rememberCopier
@@ -105,6 +109,7 @@ fun ServersScreen(vm: AppViewModel, openServices: () -> Unit) {
         AdaptiveListDetail(
             detailKey = pane,
             onCloseDetail = { pane = (pane as? InstancePane.Logs)?.let { InstancePane.Detail(it.id) } },
+            parent = { (it as? InstancePane.Logs)?.let { p -> InstancePane.Detail(p.id) } },
             list = {
                 ServerList(vm, instances, selectedId = (pane as? InstancePane.Detail)?.id,
                     onOpen = { pane = InstancePane.Detail(it.id) }, onCreate = { pane = InstancePane.Create })
@@ -175,7 +180,7 @@ private fun ServerList(vm: AppViewModel, instances: List<InstanceInfo>, selected
 }
 
 @Composable
-internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> Unit, onLogs: () -> Unit) {
+internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> Unit, onLogs: () -> Unit, onEditClient: ((GetInstanceResponse) -> Unit)? = null) {
     var details by remember(info.id) { mutableStateOf<GetInstanceResponse?>(null) }
     var error by remember(info.id) { mutableStateOf<String?>(null) }
     var confirmRemove by remember { mutableStateOf(false) }
@@ -208,7 +213,10 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
                 onBack = onBack, busy = busy,
             ) {
                 IconButton(onClick = onLogs) { Icon(Icons.AutoMirrored.Filled.Article, stringResource(Res.string.instance_logs)) }
-                IconButton(onClick = { editing = true }) { Icon(Icons.Default.Edit, stringResource(Res.string.action_edit)) }
+                IconButton(
+                    onClick = { if (info.isClient && onEditClient != null) details?.let(onEditClient) else editing = true },
+                    enabled = !info.isClient || onEditClient == null || details != null,
+                ) { Icon(Icons.Default.Edit, stringResource(Res.string.action_edit)) }
                 IconButton(onClick = { confirmRemove = true }) {
                     Icon(Icons.Default.Delete, stringResource(Res.string.action_remove), tint = MaterialTheme.colorScheme.error)
                 }
@@ -224,22 +232,25 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
                     IconTile(if (info.isClient) Icons.Default.SettingsEthernet else Icons.Default.Dns)
                     Column(Modifier.weight(1f).padding(start = 14.dp)) {
                         Text(info.displayName, style = MaterialTheme.typography.titleMedium)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            StatusDot(info.statusKind, size = 8.dp)
+                            Text(info.statusLabel, style = MaterialTheme.typography.labelMedium, color = info.statusKind.color(), fontWeight = FontWeight.SemiBold)
+                        }
                         if (group != null) Text(
                             stringResource(Res.string.instance_from_group, group.displayName),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    StatusBadge(info.statusKind, info.statusLabel)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     if (running) {
-                        OutlinedButton(onClick = { run { restartInstance(info.id) } }, enabled = !busy, modifier = Modifier.weight(1f)) {
+                        OutlinedButton(onClick = { run { restartInstance(info.id) } }, enabled = !busy, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 12.dp)) {
                             Icon(Icons.Default.Sync, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
-                            Text(stringResource(Res.string.action_restart))
+                            Text(stringResource(Res.string.action_restart), maxLines = 1)
                         }
-                        FilledTonalButton(onClick = { run { stopInstance(info.id, keep = true) } }, enabled = !busy, modifier = Modifier.weight(1f)) {
+                        FilledTonalButton(onClick = { run { stopInstance(info.id, keep = true) } }, enabled = !busy, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = 12.dp)) {
                             Icon(Icons.Default.Stop, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
-                            Text(stringResource(Res.string.action_stop))
+                            Text(stringResource(Res.string.action_stop), maxLines = 1)
                         }
                     } else {
                         Button(onClick = { run { restartInstance(info.id) } }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
@@ -261,8 +272,9 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
             if (!info.isClient && running) ServerStatsSection(vm, info)
 
             if (d != null && d.config.isNotBlank()) {
-                SectionCard(title = stringResource(Res.string.instance_configuration), action = {
-                    IconButton(onClick = { copy(d.config, configLabel) }, Modifier.size(32.dp)) {
+                SectionCard(title = stringResource(Res.string.instance_configuration), icon = Icons.Default.Description, action = {
+                    if (info.isClient) ConfigCopyChips(vm, d.config)
+                    else IconButton(onClick = { copy(d.config, configLabel) }, Modifier.size(32.dp)) {
                         Icon(Icons.Default.ContentCopy, stringResource(Res.string.instance_copy_config), Modifier.size(18.dp))
                     }
                 }) {
@@ -270,7 +282,7 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
                         SelectionContainer {
                             Text(
                                 remember(d.config) { prettyJson(d.config) }, fontFamily = MonoFamily, style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.fillMaxWidth().heightIn(max = 360.dp).verticalScroll(rememberScrollState()).padding(12.dp),
+                                modifier = Modifier.fillMaxWidth().padding(12.dp),
                             )
                         }
                     }
@@ -280,13 +292,9 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
         }
     }
 
-    if (editing) EditInstanceDialog(
-        info, details?.listenAddrs.orEmpty(),
-        onDismiss = { editing = false },
-        onSave = { name, addrs ->
-            editing = false
-            run { updateInstance(info.id, name = name.takeIf { it != info.name }, listenAddrs = addrs) }
-        },
+    if (editing) EditNameDialog(
+        info, onDismiss = { editing = false },
+        onSave = { name -> editing = false; run { updateInstance(info.id, name = name.takeIf { it != info.name }) } },
     )
     if (confirmRemove) ConfirmDialog(
         title = stringResource(Res.string.instance_remove_title, info.displayName),
@@ -299,35 +307,34 @@ internal fun InstanceDetail(vm: AppViewModel, info: InstanceInfo, onBack: () -> 
     )
 }
 
-private val listenAddrPattern = Regex("""^[^\s:]+:\d{1,5}$|^\[[0-9a-fA-F:]+]:\d{1,5}$""")
-
-/** Renames an instance and, for clients, changes the local addresses it listens on (which restarts it). */
+/** Edits a client in a full pane; [details] come from the view it was opened from so the pane is complete while it slides in. */
 @Composable
-private fun EditInstanceDialog(info: InstanceInfo, listenAddrs: List<String>, onDismiss: () -> Unit, onSave: (name: String, addrs: List<String>) -> Unit) {
+internal fun EditClientScreen(vm: AppViewModel, info: InstanceInfo, details: GetInstanceResponse, onClose: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    EditClientPane(
+        vm, info, details.listenAddrs, details.config, onClose = onClose,
+        onSave = { name, addrs, config ->
+            onClose()
+            scope.launch {
+                vm.mutate { updateInstance(info.id, name = name.takeIf { it != info.name }, config = config, listenAddrs = addrs) }
+                if (vm.subscriptionOf(info.id) != null) vm.markEntryEdited(info.id)
+            }
+        },
+    )
+}
+
+/** Renames a server instance. */
+@Composable
+private fun EditNameDialog(info: InstanceInfo, onDismiss: () -> Unit, onSave: (name: String) -> Unit) {
     var name by remember { mutableStateOf(info.name) }
-    var addrText by remember { mutableStateOf(listenAddrs.joinToString("\n")) }
-    val addrs = addrText.lines().map { it.trim() }.filter { it.isNotEmpty() }
-    val addrsChanged = addrs != listenAddrs
-    val addrsValid = addrs.all { listenAddrPattern.matches(it) && it.substringAfterLast(':').toInt() in 0..65535 }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.instance_edit_title, info.displayName)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextInput(name, { name = it }, stringResource(Res.string.form_name), isError = name.isBlank())
-                if (info.isClient) TextInput(
-                    addrText, { addrText = it }, stringResource(Res.string.instance_listen_addresses),
-                    mono = true, singleLine = false, minLines = 2, isError = !addrsValid,
-                    supporting = if (!addrsValid) stringResource(Res.string.instance_listen_error)
-                    else stringResource(Res.string.instance_listen_hint),
-                )
-            }
-        },
+        text = { TextInput(name, { name = it }, stringResource(Res.string.form_name), isError = name.isBlank()) },
         confirmButton = {
-            Button(
-                enabled = name.isNotBlank() && addrsValid && (name != info.name || addrsChanged),
-                onClick = { onSave(name.trim(), if (addrsChanged) addrs else emptyList()) },
-            ) { Text(stringResource(Res.string.action_save)) }
+            Button(enabled = name.isNotBlank() && name != info.name, onClick = { onSave(name.trim()) }) {
+                Text(stringResource(Res.string.action_save))
+            }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.action_cancel)) } },
     )
@@ -336,8 +343,12 @@ private fun EditInstanceDialog(info: InstanceInfo, listenAddrs: List<String>, on
 /** Local ports a client listens on, plus share actions for its config. */
 @Composable
 private fun ClientEndpointsCard(vm: AppViewModel, d: GetInstanceResponse) {
-    val copy = rememberCopier()
-    val scope = rememberCoroutineScope()
+    // Route IDs live in the JSON form of the config; links are converted by the service
+    var routeIds by remember(d.config) { mutableStateOf(emptyList<String>()) }
+    LaunchedEffect(d.config) {
+        val json = if (d.config.trimStart().startsWith("{")) d.config else vm.request { convertClientConfig(d.config) }.getOrNull()
+        routeIds = json?.let(::parseClientConfig)?.routes?.map { it.routeId }.orEmpty()
+    }
     SectionCard(title = stringResource(Res.string.instance_local_endpoints), icon = Icons.Default.Link) {
         if (d.listenAddrs.isEmpty()) {
             Text(
@@ -346,35 +357,38 @@ private fun ClientEndpointsCard(vm: AppViewModel, d: GetInstanceResponse) {
             )
         }
         d.listenAddrs.forEachIndexed { i, addr ->
-            InfoRow(stringResource(Res.string.instance_route_n, i + 1), addr, mono = true, copyable = true)
+            InfoRow(routeIds.getOrNull(i)?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.instance_route_n, i + 1), addr, mono = true, copyable = true)
         }
-        Text(
-            stringResource(Res.string.instance_endpoints_hint),
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = {
-                scope.launch {
-                    vm.request { convertClientConfig(d.config) }
-                        .onSuccess {
-                            copy(
-                                if (d.config.trimStart().startsWith("{")) it else d.config,
-                                getString(Res.string.config_url_label),
-                            )
-                        }
-                        .onFailure { vm.notify(it.message ?: getString(Res.string.instance_conversion_failed)) }
-                }
-            }, label = { Text(stringResource(Res.string.instance_copy_as_url)) }, leadingIcon = { Icon(Icons.Default.Link, null, Modifier.size(18.dp)) })
-            AssistChip(onClick = {
-                scope.launch {
-                    val jsonLabel = getString(Res.string.config_json_label)
-                    if (d.config.trimStart().startsWith("{")) copy(d.config, jsonLabel)
-                    else vm.request { convertClientConfig(d.config) }
-                        .onSuccess { copy(prettyJson(it), jsonLabel) }
-                        .onFailure { vm.notify(it.message ?: getString(Res.string.instance_conversion_failed)) }
-                }
-            }, label = { Text(stringResource(Res.string.instance_copy_as_json)) }, leadingIcon = { Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp)) })
-        }
+    }
+}
+
+/** Copies a client's config as a turnable:// link or as JSON, converting through the service when needed. */
+@Composable
+private fun ConfigCopyChips(vm: AppViewModel, config: String) {
+    val copy = rememberCopier()
+    val scope = rememberCoroutineScope()
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        AssistChip(onClick = {
+            scope.launch {
+                vm.request { convertClientConfig(config) }
+                    .onSuccess {
+                        copy(
+                            if (config.trimStart().startsWith("{")) it else config,
+                            getString(Res.string.config_url_label),
+                        )
+                    }
+                    .onFailure { vm.notify(it.message ?: getString(Res.string.instance_conversion_failed)) }
+            }
+        }, label = { Text("URL") }, leadingIcon = { Icon(Icons.Default.Link, null, Modifier.size(18.dp)) })
+        AssistChip(onClick = {
+            scope.launch {
+                val jsonLabel = getString(Res.string.config_json_label)
+                if (config.trimStart().startsWith("{")) copy(config, jsonLabel)
+                else vm.request { convertClientConfig(config) }
+                    .onSuccess { copy(prettyJson(it), jsonLabel) }
+                    .onFailure { vm.notify(it.message ?: getString(Res.string.instance_conversion_failed)) }
+            }
+        }, label = { Text("JSON") }, leadingIcon = { Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp)) })
     }
 }
 

@@ -137,23 +137,20 @@
     <string name="form_mode_link_json">Link / JSON</string>
     <string name="form_name">Name</string>
     <string name="form_instance_id">Instance ID (optional)</string>
-    <string name="form_instance_id_hint">Leave empty to let the service generate one</string>
     <string name="form_autostart">Autostart</string>
     <string name="form_autostart_hint">Restore this instance when the service restarts</string>
     <string name="form_still_needed">Still needed: %1$s</string>
     <string name="form_config_accepted">The service accepts this config</string>
-    <string name="form_server_name_hint">e.g. Main relay</string>
     <string name="form_server_new_title">New server</string>
     <string name="form_provider_section">Provider</string>
-    <string name="form_no_provider_error">Create a provider first (Providers tab). It holds the routes and users this server serves.</string>
+    <string name="form_no_provider_error">Create a provider first. It holds the routes and users this server serves.</string>
     <string name="form_provider">Provider</string>
     <string name="form_select_placeholder">Select…</string>
     <string name="form_configuration">Configuration</string>
     <string name="form_server_config_json">Server config JSON</string>
     <string name="form_platform">Platform</string>
     <string name="form_call_id">Call ID</string>
-    <string name="form_call_id_hint">Platform call or meeting ID</string>
-    <string name="form_public_ip">Public IP / host</string>
+    <string name="form_public_ip">Public IP</string>
     <string name="form_listen_address">Listen address</string>
     <string name="form_protocol">Protocol</string>
     <string name="form_cloak">Cloak</string>
@@ -176,16 +173,11 @@
     <string name="client_new_title">New client</string>
     <string name="client_start_count">Start %1$d</string>
     <string name="client_raw_label">turnable:// link or JSON</string>
-    <string name="client_raw_hint">One config per line, several lines start several clients</string>
     <string name="client_bulk_detected">%1$d configs detected. Each client gets its own random local port and the name from its link.</string>
     <string name="client_bulk_autostart_hint">Restore these clients when the service restarts</string>
-    <string name="client_name_hint">Defaults to the name in the config</string>
     <string name="client_listen_address">Local listen address</string>
-    <string name="client_listen_suggested">The link suggests its own ports, which are used unless you change this</string>
-    <string name="client_listen_hint">First route listens here, further routes use the next ports</string>
     <string name="client_new_random_port">New random port</string>
     <string name="client_connection_type">Connection type</string>
-    <string name="client_type_direct_hint">Straight to the destination, not recommended</string>
     <string name="client_user_uuid">User UUID</string>
     <string name="client_gateway">Gateway (host:port)</string>
     <string name="client_peers">Peers</string>
@@ -204,13 +196,6 @@
     <string name="missing_listen_address">listen address</string>
     <string name="missing_key_pair">key pair</string>
 
-    <string name="choice_proto_dtls">Raw DTLS, simple</string>
-    <string name="choice_proto_srtp">DTLS+SRTP, looks like media</string>
-    <string name="choice_proto_none">No protocol, not recommended</string>
-    <string name="choice_transport_mpath">Multipath, recommended</string>
-    <string name="choice_transport_kcp">Reliable stream, for TCP</string>
-    <string name="choice_transport_sctp">Supported, not ideal</string>
-    <string name="choice_transport_none">UDP routes only</string>
 
     <!-- Servers and instances -->
     <string name="servers_title">Servers</string>
@@ -234,13 +219,9 @@
     <string name="instance_edit_title">Edit %1$s</string>
     <string name="instance_listen_addresses">Listen addresses</string>
     <string name="instance_listen_error">One host:port per line</string>
-    <string name="instance_listen_hint">One per line, one per route. Changing them restarts the client</string>
     <string name="instance_local_endpoints">Local endpoints</string>
     <string name="instance_default_endpoint">Default (127.0.0.1, random port)</string>
     <string name="instance_route_n">Route %1$d</string>
-    <string name="instance_endpoints_hint">Point your VPN app (e.g. WireGuard in NekoBox, MTU 1280) at these addresses.</string>
-    <string name="instance_copy_as_url">Copy as URL</string>
-    <string name="instance_copy_as_json">Copy as JSON</string>
     <string name="instance_conversion_failed">Conversion failed</string>
     <string name="config_url_label">Config URL</string>
     <string name="config_json_label">Config JSON</string>
@@ -253,33 +234,22 @@
     <string name="logs_jump_latest">Jump to latest</string>
     <string name="logs_search_hint">Search logs</string>
     <string name="logs_clear_search">Clear search</string>
-    <string name="logs_level_all">All</string>
-    <string name="logs_level_debug">Debug</string>
-    <string name="logs_level_info">Info</string>
-    <string name="logs_level_warn">Warn</string>
-    <string name="logs_level_error">Error</string>
     <string name="logs_waiting">Waiting for logs</string>
     <string name="logs_nothing_matches">Nothing matches</string>
     <string name="logs_copy_label">Logs</string>
-    <string name="logs_verbose">Verbose</string>
-    <string name="logs_verbose_hint">Debug logging. Restarts the service</string>
 
     <!-- Providers -->
     <string name="providers_title">Providers</string>
     <string name="providers_new">New provider</string>
     <string name="providers_empty_title">No providers</string>
-    <string name="providers_empty_body">A provider holds the routes (destinations) and users that servers accept.</string>
+    <string name="providers_empty_body">A provider holds the routes and users that servers accept.</string>
     <string name="providers_select">Select a provider</string>
     <string name="provider_new_title">New provider</string>
     <string name="provider_name">Name</string>
     <string name="provider_uuid_optional">UUID (optional)</string>
-    <string name="provider_uuid_hint">Generated by the service when empty</string>
     <string name="provider_type">Type</string>
-    <string name="provider_type_raw_hint">Routes and users are stored by the service</string>
-    <string name="provider_type_json_hint">Read from a JSON file on the service host</string>
     <string name="provider_path">File path on the service host</string>
     <string name="provider_initial_config">Initial config JSON (optional)</string>
-    <string name="provider_initial_config_hint">Leave empty to start with no routes or users and add them afterwards</string>
     <string name="provider_invalid_config">Invalid provider config</string>
     <string name="provider_used_by_server">Used by a server</string>
     <string name="provider_not_used">Not used</string>
@@ -312,16 +282,13 @@
     <string name="route_add_title">Add route</string>
     <string name="route_edit_title">Edit route</string>
     <string name="route_id">Route ID</string>
-    <string name="route_id_hint">Same ID replaces the route</string>
     <string name="route_display_name">Display name</string>
     <string name="route_destination_ip">Destination IP</string>
     <string name="route_port">Port</string>
-    <string name="route_mpath_encrypts">mpath always encrypts everything</string>
     <string name="route_tcp_needs_transport">TCP routes need a transport (mpath or kcp)</string>
 
     <string name="user_title">User</string>
     <string name="user_uuid">UUID</string>
-    <string name="user_uuid_hint">Works as the password for this user</string>
     <string name="user_force_turn">Force TURN</string>
     <string name="user_allowed_routes">Allowed routes</string>
     <string name="user_add_routes_first">Add routes to the provider first.</string>
@@ -393,7 +360,7 @@
     <string name="service_custom_core">Custom core</string>
     <string name="service_captcha">Captcha</string>
     <string name="service_captcha_always_manual">Always manual</string>
-    <string name="service_captcha_automatic">Automatic, manual when it fails</string>
+    <string name="service_captcha_automatic">Automatic</string>
     <string name="service_socket">Socket</string>
     <string name="service_host">Host</string>
     <string name="service_port">Port</string>
@@ -508,6 +475,7 @@
     <string name="update_core_name">Service</string>
     <string name="update_version_change">%1$s → %2$s</string>
     <string name="update_version_current">%1$s · up to date</string>
+    <string name="update_version_dev">%1$s · development build</string>
     <string name="update_auto">Check automatically</string>
     <string name="update_auto_hint">Looks for new app and service releases every few hours and asks before installing anything</string>
     <string name="update_downloading_installer">Downloading the installer…</string>

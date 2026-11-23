@@ -2,6 +2,7 @@ package ru.theairblow.turnable.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -152,6 +152,13 @@ fun ServicesScreen(vm: AppViewModel) {
                 else -> null
             }
         },
+        parent = {
+            when (it) {
+                is ServicePane.Edit -> ServicePane.Detail(it.id)
+                is ServicePane.Logs -> ServicePane.Detail(it.id)
+                else -> null
+            }
+        },
         list = {
             ServiceList(
                 vm, prefs.services,
@@ -189,7 +196,7 @@ fun ServicesScreen(vm: AppViewModel) {
                 val svc = prefs.services.firstOrNull { it.id == p.id }
                 LogsPane(
                     vm, title = stringResource(Res.string.services_service_logs), onBack = { pane = ServicePane.Detail(p.id) },
-                    verbose = svc?.verbose.takeIf { svc?.type == ServiceType.LOCAL }, onVerbose = { vm.updateVerbose(p.id, it) },
+                    verbose = svc?.verbose.takeIf { svc?.type == ServiceType.LOCAL },
                 )
             }
         }
@@ -455,7 +462,7 @@ private fun LocalOutputCard(vm: AppViewModel, id: String, running: Boolean) {
             SelectionContainer {
                 Text(
                     output, color = colors.logText, fontFamily = MonoFamily, style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 260.dp).verticalScroll(rememberScrollState()).padding(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
                 )
             }
         }
@@ -550,7 +557,7 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
 
             if (type == ServiceType.LOCAL) {
                 FormSection(stringResource(Res.string.service_release_section))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (versions.isNotEmpty()) {
                         DropdownField(
                             stringResource(Res.string.service_version_field), version, versions, { version = it }, Modifier.weight(1f),
@@ -562,9 +569,12 @@ private fun ServiceForm(vm: AppViewModel, existing: ServiceConfig?, onClose: () 
                             Modifier.weight(1f), mono = true, supporting = stringResource(Res.string.service_version_tag_hint),
                         )
                     }
-                    if (loadingVersions) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
-                    else IconButton(onClick = { loadVersions() }) {
-                        Icon(Icons.Default.Refresh, stringResource(Res.string.service_reload_releases))
+                    // Same box for both states and as tall as the field, so the button lines up with it and doesn't resize
+                    Box(Modifier.size(48.dp, 56.dp), Alignment.Center) {
+                        if (loadingVersions) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                        else IconButton(onClick = { loadVersions() }) {
+                            Icon(Icons.Default.Refresh, stringResource(Res.string.service_reload_releases))
+                        }
                     }
                 }
                 versionsError?.let { ErrorBanner(it) { versionsError = null } }

@@ -22,10 +22,15 @@ private const val MIN_SCALE = 0.9f
 
 /** Runs [onBack] on the back gesture; while the user swipes, [content] shrinks and slides toward the swipe like the system's own preview. */
 @Composable
-fun PredictiveBack(enabled: Boolean = true, onBack: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun PredictiveBack(
+    enabled: Boolean = true, onBack: () -> Unit, modifier: Modifier = Modifier,
+    /** Swipe progress 0..1; it stays where the swipe ended when the back is committed. */
+    onProgress: (Float) -> Unit = {},
+    content: @Composable () -> Unit,
+) {
     var progress by remember { mutableFloatStateOf(0f) }
     var swiping by remember { mutableStateOf(false) }
-    PlatformBackHandler(enabled, onProgress = { progress = it; swiping = it != 0f }, onBack = onBack)
+    PlatformBackHandler(enabled, onProgress = { progress = it; swiping = it != 0f; onProgress(abs(it)) }, onBack = onBack)
     val shown by animateFloatAsState(progress, if (swiping) snap() else spring(stiffness = Spring.StiffnessMediumLow), label = "predictiveBack")
     Box(
         modifier.graphicsLayer {

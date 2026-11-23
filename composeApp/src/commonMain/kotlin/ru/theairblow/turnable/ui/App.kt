@@ -63,6 +63,7 @@ import ru.theairblow.turnable.ui.screens.ServersScreen
 import androidx.compose.material3.Surface
 import ru.theairblow.turnable.ui.screens.LogsScreen
 import ru.theairblow.turnable.ui.util.PredictiveBack
+import ru.theairblow.turnable.ui.util.paneTransition
 import ru.theairblow.turnable.ui.screens.ProvidersScreen
 import ru.theairblow.turnable.ui.screens.ServicesScreen
 import ru.theairblow.turnable.ui.screens.SettingsScreen
@@ -147,8 +148,13 @@ fun App(viewModel: AppViewModel) {
                         Box(Modifier.padding(padding).consumeWindowInsets(padding)) { content(Modifier.fillMaxSize()) }
                     }
                 }
-                captchas.firstOrNull { it.instanceId == captchaId }?.let { request ->
-                    PredictiveBack(onBack = viewModel::closeCaptcha, modifier = Modifier.fillMaxSize()) {
+                AnimatedContent(
+                    captchas.firstOrNull { it.instanceId == captchaId },
+                    Modifier.fillMaxSize(),
+                    transitionSpec = { paneTransition(initialState != null, targetState != null) },
+                    label = "captcha",
+                ) { request ->
+                    if (request != null) PredictiveBack(onBack = viewModel::closeCaptcha, modifier = Modifier.fillMaxSize()) {
                         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
                             CaptchaScreen(request, onSolved = { viewModel.captchaSolved(request.instanceId) }, onClose = viewModel::closeCaptcha)
                         }

@@ -82,7 +82,7 @@ open class JvmLocalServiceHost(private val baseDir: File, private val assetName:
             if (!it.isFile) throw IOException("Custom core not found: $customBinary")
             if (!it.canExecute() && !it.setExecutable(true)) throw IOException("Custom core is not executable: $customBinary")
         }
-        val socket = File(socketPath(id)).also { it.parentFile.mkdirs(); it.delete() } // drop a stale socket
+        val socket = File(socketPath(id)).also { it.parentFile?.mkdirs(); it.delete() } // drop a stale socket
         val dir = serviceDir(id).also { it.mkdirs() }
         val config = File(dir, "service.json")
         val persist = File(dir, "data").also { it.mkdirs() }
@@ -154,7 +154,7 @@ open class JvmLocalServiceHost(private val baseDir: File, private val assetName:
         require(version.isNotBlank()) { "No version selected" }
         val target = File(baseDir, "bin/$version/$asset")
         if (target.exists()) return target
-        target.parentFile.mkdirs()
+        target.parentFile?.mkdirs()
 
         val tmp = File(target.parentFile, "$asset.part")
         val conn = openHttp("$DOWNLOAD_BASE/$version/$asset")

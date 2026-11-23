@@ -43,9 +43,12 @@ const val RETRY_AFTER_FAILURE_SEC = 15 * 60L
 /** Local ports reserved per entry: a client listens on its base port plus one per extra route. */
 const val PORTS_PER_ENTRY = 8
 
-/** One link of a subscription and the client instance created for it. [port] is the base port, chosen once and kept. */
+/**
+ * One link of a subscription and the client instance created for it. [port] is the base port, chosen once and kept.
+ * An [edited] entry keeps its local name and config when the subscription updates.
+ */
 @Serializable
-data class SubscriptionEntry(val key: String, val instanceId: String, val port: Int, val name: String)
+data class SubscriptionEntry(val key: String, val instanceId: String, val port: Int, val name: String, val edited: Boolean = false)
 
 /** Parsed Subscription-Userinfo header; [total]/[expire] are 0 when unlimited. */
 @Serializable

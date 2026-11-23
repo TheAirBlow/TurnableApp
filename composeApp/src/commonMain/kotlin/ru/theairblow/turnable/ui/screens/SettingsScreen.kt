@@ -64,6 +64,7 @@ import ru.theairblow.turnable.data.ServiceConfig
 import ru.theairblow.turnable.data.ServiceType
 import ru.theairblow.turnable.data.ThemeMode
 import ru.theairblow.turnable.service.APP_VERSION
+import ru.theairblow.turnable.service.IS_DEV_BUILD
 import ru.theairblow.turnable.service.MIN_CORE_VERSION
 import ru.theairblow.turnable.service.SERVICE_PROTOCOL_VERSION
 import ru.theairblow.turnable.service.USER_AGENT
@@ -261,6 +262,7 @@ private fun UpdatesCard(vm: AppViewModel, prefs: AppPreferencesData) {
         Column {
             UpdateRow(
                 Icons.Default.PhoneAndroid, stringResource(Res.string.update_app_name), APP_VERSION.asTag(), appUpdate?.version,
+                subtitle = if (IS_DEV_BUILD) stringResource(Res.string.update_version_dev, APP_VERSION.asTag()) else null,
                 busy = if (appInstalling) ({ DownloadBar(appDownload, stringResource(Res.string.update_downloading_installer)) }) else null,
             ) { appUpdate?.let { AppUpdateActions(it, vm::installAppUpdate) } }
 

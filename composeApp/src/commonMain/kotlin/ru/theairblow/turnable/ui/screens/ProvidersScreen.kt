@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +19,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AltRoute
+import androidx.compose.material.icons.automirrored.filled.AltRoute
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Inventory2
@@ -85,7 +84,6 @@ import ru.theairblow.turnable.ui.components.SwitchRow
 import ru.theairblow.turnable.ui.components.TextInput
 import ru.theairblow.turnable.ui.components.rememberCopier
 import ru.theairblow.turnable.ui.theme.MonoFamily
-import ru.theairblow.turnable.ui.util.describeTransport
 import ru.theairblow.turnable.ui.util.shortId
 import ru.theairblow.turnable.viewmodel.AppViewModel
 import turnable.composeapp.generated.resources.*
@@ -208,21 +206,15 @@ private fun AddProviderPane(vm: AppViewModel, onClose: () -> Unit, onCreated: (S
             TextInput(name, { name = it }, stringResource(Res.string.provider_name))
             TextInput(
                 uuid, { uuid = it.trim() }, stringResource(Res.string.provider_uuid_optional),
-                mono = true, supporting = stringResource(Res.string.provider_uuid_hint),
+                mono = true,
             )
             DropdownField(
                 stringResource(Res.string.provider_type), type, listOf("raw", "json"), { type = it },
-                hint = {
-                    stringResource(
-                        if (it == "raw") Res.string.provider_type_raw_hint else Res.string.provider_type_json_hint,
-                    )
-                },
             )
             if (type == "json") TextInput(path, { path = it }, stringResource(Res.string.provider_path), mono = true)
             else TextInput(
                 raw, { raw = it }, stringResource(Res.string.provider_initial_config),
                 mono = true, singleLine = false, minLines = 5,
-                supporting = stringResource(Res.string.provider_initial_config_hint),
             )
         }
     }
@@ -280,7 +272,7 @@ private fun ProviderDetail(vm: AppViewModel, provider: ProviderInfo, onBack: () 
             error?.let { ErrorBanner(it) }
             SectionCard { InfoRow(stringResource(Res.string.provider_uuid), provider.uuid, mono = true, copyable = true) }
 
-            SectionCard(title = stringResource(Res.string.provider_routes_n, routes.size), icon = Icons.Default.AltRoute, action = {
+            SectionCard(title = stringResource(Res.string.provider_routes_n, routes.size), icon = Icons.AutoMirrored.Filled.AltRoute, action = {
                 IconButton(onClick = { editRoute = RouteInfo() }, Modifier.size(32.dp)) {
                     Icon(Icons.Default.Add, stringResource(Res.string.provider_add_route))
                 }
@@ -332,7 +324,7 @@ private fun ProviderDetail(vm: AppViewModel, provider: ProviderInfo, onBack: () 
                     SelectionContainer {
                         Text(
                             remember(config) { prettyJson(config) }, fontFamily = MonoFamily, style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp).verticalScroll(rememberScrollState()).padding(12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
                         )
                     }
                 }
@@ -436,7 +428,6 @@ private fun RouteDialog(initial: RouteInfo, isNew: Boolean, onDismiss: () -> Uni
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextInput(
                     r.id, { r = r.copy(id = it.trim()) }, stringResource(Res.string.route_id), mono = true,
-                    supporting = if (!isNew) stringResource(Res.string.route_id_hint) else null,
                 )
                 TextInput(r.name, { r = r.copy(name = it) }, stringResource(Res.string.route_display_name))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -452,11 +443,9 @@ private fun RouteDialog(initial: RouteInfo, isNew: Boolean, onDismiss: () -> Uni
                 DropdownField(stringResource(Res.string.form_socket), r.socket, Choices.sockets, { r = r.copy(socket = it) })
                 DropdownField(
                     stringResource(Res.string.form_transport), r.transport, Choices.transports, { r = r.copy(transport = it) },
-                    hint = { describeTransport(it) },
                 )
                 DropdownField(
                     stringResource(Res.string.form_encryption), r.encryption, Choices.encryptions, { r = r.copy(encryption = it) },
-                    hint = { if (r.transport == "mpath") stringResource(Res.string.route_mpath_encrypts) else null },
                 )
                 if (tcpWithoutTransport) ErrorBanner(stringResource(Res.string.route_tcp_needs_transport))
             }
@@ -481,7 +470,7 @@ private fun UserDialog(initial: UserInfo, routes: List<RouteInfo>, onDismiss: ()
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextInput(
                     u.uuid, { u = u.copy(uuid = it.trim()) }, stringResource(Res.string.user_uuid),
-                    mono = true, supporting = stringResource(Res.string.user_uuid_hint),
+                    mono = true,
                     trailing = {
                         IconButton(onClick = { u = u.copy(uuid = newUuid()) }) {
                             Icon(Icons.Default.Shuffle, stringResource(Res.string.action_generate))

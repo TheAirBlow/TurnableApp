@@ -141,23 +141,20 @@
     <string name="form_mode_link_json">Ссылка / JSON</string>
     <string name="form_name">Название</string>
     <string name="form_instance_id">ID экземпляра (необязательно)</string>
-    <string name="form_instance_id_hint">Оставьте пустым, чтобы сервис создал его сам</string>
     <string name="form_autostart">Автозапуск</string>
     <string name="form_autostart_hint">Восстанавливать этот экземпляр при перезапуске сервиса</string>
     <string name="form_still_needed">Ещё нужно: %1$s</string>
     <string name="form_config_accepted">Сервис принимает этот конфиг</string>
-    <string name="form_server_name_hint">например, основной релей</string>
     <string name="form_server_new_title">Новый сервер</string>
     <string name="form_provider_section">Провайдер</string>
-    <string name="form_no_provider_error">Сначала создайте провайдера (вкладка «Провайдеры»). Он хранит маршруты и пользователей, которых обслуживает этот сервер.</string>
+    <string name="form_no_provider_error">Сначала создайте провайдера. Он хранит маршруты и пользователей, которых обслуживает этот сервер.</string>
     <string name="form_provider">Провайдер</string>
     <string name="form_select_placeholder">Выберите…</string>
     <string name="form_configuration">Конфигурация</string>
     <string name="form_server_config_json">JSON конфигурации сервера</string>
     <string name="form_platform">Платформа</string>
     <string name="form_call_id">ID звонка</string>
-    <string name="form_call_id_hint">ID звонка или встречи на платформе</string>
-    <string name="form_public_ip">Публичный IP / хост</string>
+    <string name="form_public_ip">Публичный IP</string>
     <string name="form_listen_address">Адрес прослушивания</string>
     <string name="form_protocol">Протокол</string>
     <string name="form_cloak">Маскировка</string>
@@ -180,16 +177,11 @@
     <string name="client_new_title">Новый клиент</string>
     <string name="client_start_count">Запустить %1$d</string>
     <string name="client_raw_label">Ссылка turnable:// или JSON</string>
-    <string name="client_raw_hint">Один конфиг на строку, несколько строк запускают несколько клиентов</string>
     <string name="client_bulk_detected">Обнаружено конфигураций: %1$d. Каждый клиент получит свой случайный локальный порт и имя из своей ссылки.</string>
     <string name="client_bulk_autostart_hint">Восстанавливать этих клиентов при перезапуске сервиса</string>
-    <string name="client_name_hint">По умолчанию берётся имя из конфига</string>
     <string name="client_listen_address">Локальный адрес прослушивания</string>
-    <string name="client_listen_suggested">Ссылка предлагает свои порты, они используются, если не изменить это поле</string>
-    <string name="client_listen_hint">Первый маршрут слушает здесь, следующие маршруты используют порты подряд</string>
     <string name="client_new_random_port">Новый случайный порт</string>
     <string name="client_connection_type">Тип подключения</string>
-    <string name="client_type_direct_hint">Напрямую к назначению, не рекомендуется</string>
     <string name="client_user_uuid">UUID пользователя</string>
     <string name="client_gateway">Шлюз (хост:порт)</string>
     <string name="client_peers">Пиры</string>
@@ -208,13 +200,6 @@
     <string name="missing_listen_address">адрес прослушивания</string>
     <string name="missing_key_pair">пара ключей</string>
 
-    <string name="choice_proto_dtls">Чистый DTLS, простой</string>
-    <string name="choice_proto_srtp">DTLS+SRTP, похож на медиатрафик</string>
-    <string name="choice_proto_none">Без протокола, не рекомендуется</string>
-    <string name="choice_transport_mpath">Мультипуть, рекомендуется</string>
-    <string name="choice_transport_kcp">Надёжный поток, для TCP</string>
-    <string name="choice_transport_sctp">Поддерживается, но не идеально</string>
-    <string name="choice_transport_none">Только для UDP-маршрутов</string>
 
     <!-- Servers and instances -->
     <string name="servers_title">Серверы</string>
@@ -238,13 +223,9 @@
     <string name="instance_edit_title">Изменить %1$s</string>
     <string name="instance_listen_addresses">Адреса прослушивания</string>
     <string name="instance_listen_error">Один хост:порт на строку</string>
-    <string name="instance_listen_hint">По одному на строку и на маршрут. Изменение перезапускает клиента</string>
     <string name="instance_local_endpoints">Локальные адреса</string>
     <string name="instance_default_endpoint">По умолчанию (127.0.0.1, случайный порт)</string>
     <string name="instance_route_n">Маршрут %1$d</string>
-    <string name="instance_endpoints_hint">Направьте VPN-приложение (например, WireGuard в NekoBox, MTU 1280) на эти адреса.</string>
-    <string name="instance_copy_as_url">Копировать как URL</string>
-    <string name="instance_copy_as_json">Копировать как JSON</string>
     <string name="instance_conversion_failed">Ошибка преобразования</string>
     <string name="config_url_label">URL конфига</string>
     <string name="config_json_label">JSON конфига</string>
@@ -257,33 +238,22 @@
     <string name="logs_jump_latest">К последним строкам</string>
     <string name="logs_search_hint">Поиск по логам</string>
     <string name="logs_clear_search">Очистить поиск</string>
-    <string name="logs_level_all">Все</string>
-    <string name="logs_level_debug">Отладка</string>
-    <string name="logs_level_info">Инфо</string>
-    <string name="logs_level_warn">Предупр.</string>
-    <string name="logs_level_error">Ошибка</string>
     <string name="logs_waiting">Ожидание логов</string>
     <string name="logs_nothing_matches">Ничего не найдено</string>
     <string name="logs_copy_label">Логи</string>
-    <string name="logs_verbose">Подробно</string>
-    <string name="logs_verbose_hint">Отладочные логи. Перезапускает сервис</string>
 
     <!-- Providers -->
     <string name="providers_title">Провайдеры</string>
     <string name="providers_new">Новый провайдер</string>
     <string name="providers_empty_title">Провайдеров нет</string>
-    <string name="providers_empty_body">Провайдер хранит маршруты (назначения) и пользователей, которых принимают серверы.</string>
+    <string name="providers_empty_body">Провайдер хранит маршруты и пользователей, которых принимают серверы.</string>
     <string name="providers_select">Выберите провайдера</string>
     <string name="provider_new_title">Новый провайдер</string>
     <string name="provider_name">Название</string>
     <string name="provider_uuid_optional">UUID (необязательно)</string>
-    <string name="provider_uuid_hint">Если пусто, сервис создаст его сам</string>
     <string name="provider_type">Тип</string>
-    <string name="provider_type_raw_hint">Маршруты и пользователи хранятся в сервисе</string>
-    <string name="provider_type_json_hint">Читается из JSON-файла на хосте сервиса</string>
     <string name="provider_path">Путь к файлу на хосте сервиса</string>
     <string name="provider_initial_config">Начальный JSON конфигурации (необязательно)</string>
-    <string name="provider_initial_config_hint">Оставьте пустым, чтобы начать без маршрутов и пользователей, и добавьте их позже</string>
     <string name="provider_invalid_config">Некорректная конфигурация провайдера</string>
     <string name="provider_used_by_server">Используется сервером</string>
     <string name="provider_not_used">Не используется</string>
@@ -318,16 +288,13 @@
     <string name="route_add_title">Добавить маршрут</string>
     <string name="route_edit_title">Изменить маршрут</string>
     <string name="route_id">ID маршрута</string>
-    <string name="route_id_hint">Тот же ID заменит маршрут</string>
     <string name="route_display_name">Отображаемое имя</string>
     <string name="route_destination_ip">IP назначения</string>
     <string name="route_port">Порт</string>
-    <string name="route_mpath_encrypts">mpath всегда шифрует всё</string>
     <string name="route_tcp_needs_transport">TCP-маршрутам нужен транспорт (mpath или kcp)</string>
 
     <string name="user_title">Пользователь</string>
     <string name="user_uuid">UUID</string>
-    <string name="user_uuid_hint">Работает как пароль пользователя</string>
     <string name="user_force_turn">Принудительный TURN</string>
     <string name="user_allowed_routes">Разрешённые маршруты</string>
     <string name="user_add_routes_first">Сначала добавьте маршруты провайдеру.</string>
@@ -403,7 +370,7 @@
     <string name="service_custom_core">Пользовательское ядро</string>
     <string name="service_captcha">Капча</string>
     <string name="service_captcha_always_manual">Всегда вручную</string>
-    <string name="service_captcha_automatic">Автоматически, вручную при ошибке</string>
+    <string name="service_captcha_automatic">Автоматически</string>
     <string name="service_socket">Сокет</string>
     <string name="service_host">Хост</string>
     <string name="service_port">Порт</string>
@@ -524,6 +491,7 @@
     <string name="update_core_name">Сервис</string>
     <string name="update_version_change">%1$s → %2$s</string>
     <string name="update_version_current">%1$s · актуальная версия</string>
+    <string name="update_version_dev">%1$s · версия разработчика</string>
     <string name="update_auto">Проверять автоматически</string>
     <string name="update_auto_hint">Ищет новые версии приложения и сервиса каждые несколько часов и спрашивает, прежде чем что-то установить</string>
     <string name="update_downloading_installer">Загрузка установщика…</string>

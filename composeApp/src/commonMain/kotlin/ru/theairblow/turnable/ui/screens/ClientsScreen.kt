@@ -74,6 +74,7 @@ import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 import ru.theairblow.turnable.config.splitConfigs
 import ru.theairblow.turnable.platform.CaptchaRequest
+import ru.theairblow.turnable.proto.GetInstanceResponse
 import ru.theairblow.turnable.proto.InstanceInfo
 import ru.theairblow.turnable.proto.InstanceStatus
 import ru.theairblow.turnable.proto.InstanceType
@@ -99,6 +100,7 @@ private sealed interface ClientPane {
     data object Create : ClientPane
     data class Detail(val id: String) : ClientPane
     data class Logs(val id: String) : ClientPane
+    data class Edit(val id: String, val details: GetInstanceResponse) : ClientPane
 }
 
 /** Clients of one subscription, or the ones that belong to none when [subscription] is null. */
@@ -140,19 +142,34 @@ fun ClientsScreen(vm: AppViewModel, openServices: () -> Unit) {
     ConnectionGate(vm, openServices) {
         AdaptiveListDetail(
             detailKey = pane,
-            onCloseDetail = { pane = (pane as? ClientPane.Logs)?.let { ClientPane.Detail(it.id) } },
+            onCloseDetail = {
+                pane = when (val p = pane) {
+                    is ClientPane.Logs -> ClientPane.Detail(p.id)
+                    is ClientPane.Edit -> ClientPane.Detail(p.id)
+                    else -> null
+                }
+            },
             list = {
                 ClientList(vm, clients, selectedId = (pane as? ClientPane.Detail)?.id,
                     onOpen = { pane = ClientPane.Detail(it.id) }, onCreate = { pane = ClientPane.Create })
             },
             placeholder = { EmptyState(Icons.Default.SettingsEthernet, stringResource(Res.string.clients_select)) },
+            parent = { if (it is ClientPane.Edit) ClientPane.Detail(it.id) else if (it is ClientPane.Logs) ClientPane.Detail(it.id) else null },
         ) { p ->
             when (p) {
                 ClientPane.Create -> CreateClientPane(vm, onClose = { pane = null }, onCreated = { pane = ClientPane.Detail(it) })
                 is ClientPane.Detail -> {
                     val info = clients.firstOrNull { it.id == p.id }
                     if (info == null) LaunchedEffect(p.id) { pane = null }
-                    else InstanceDetail(vm, info, onBack = { pane = null }, onLogs = { pane = ClientPane.Logs(info.id) })
+                    else InstanceDetail(
+                        vm, info, onBack = { pane = null }, onLogs = { pane = ClientPane.Logs(info.id) },
+                        onEditClient = { pane = ClientPane.Edit(info.id, it) },
+                    )
+                }
+                is ClientPane.Edit -> {
+                    val info = clients.firstOrNull { it.id == p.id }
+                    if (info == null) LaunchedEffect(p.id) { pane = null }
+                    else EditClientScreen(vm, info, p.details, onClose = { pane = ClientPane.Detail(p.id) })
                 }
                 is ClientPane.Logs -> LogsPane(
                     vm, title = stringResource(Res.string.clients_logs_title, clients.firstOrNull { it.id == p.id }?.displayName ?: p.id),
