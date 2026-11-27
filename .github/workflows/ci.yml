@@ -127,6 +127,7 @@ jobs:
       matrix:
         include:
           - { name: linux,   os: ubuntu-latest,  task: packageDeb, ext: deb }
+          - { name: linux-appimage,   os: ubuntu-latest,  task: createDistributable, ext: AppImage }
           - { name: windows, os: windows-latest, task: packageMsi, ext: msi }
           - { name: macos,   os: macos-latest,   task: packageDmg, ext: dmg }
     steps:
@@ -146,7 +147,28 @@ jobs:
           [ "${{ needs.version.outputs.bump }}" != none ] && VERSION_ARG=-PappVersion=${{ needs.version.outputs.number }}
           ./gradlew :composeApp:${{ matrix.task }} $VERSION_ARG
           mkdir -p dist
-          cp "$(find composeApp/build/compose/binaries -name '*.${{ matrix.ext }}' | head -n1)" "dist/turnable-${{ matrix.name }}.${{ matrix.ext }}"
+          if [ "${{ matrix.ext }}" = "AppImage" ]; then
+            APP_DIR=$(find composeApp/build/compose/binaries/main/app -maxdepth 1 -mindepth 1 -type d | head -n1)
+            BIN_NAME=$(basename "$APP_DIR")
+
+            printf '#!/bin/sh\nHERE="$(dirname "$(readlink -f "${0}")")"\nexec "$HERE/bin/%s" "$@"\n' "$BIN_NAME" > "$APP_DIR/AppRun"
+            chmod +x "$APP_DIR/AppRun"
+
+            ICON_FILE=$(find composeApp/src -type f -name "*.png" | head -n1)
+            if [ -n "$ICON_FILE" ]; then
+              cp "$ICON_FILE" "$APP_DIR/icon.png"
+            else
+              touch "$APP_DIR/icon.png"
+            fi
+
+            printf '[Desktop Entry]\nName=%s\nExec=%s\nIcon=icon\nType=Application\nCategories=Network;\n' "$BIN_NAME" "$BIN_NAME" > "$APP_DIR/$BIN_NAME.desktop"
+
+            wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+            chmod +x appimagetool
+            ARCH=x86_64 ./appimagetool --appimage-extract-and-run "$APP_DIR" "dist/turnable-${{ matrix.name }}.${{ matrix.ext }}"
+          else
+            cp "$(find composeApp/build/compose/binaries -name '*.${{ matrix.ext }}' | head -n1)" "dist/turnable-${{ matrix.name }}.${{ matrix.ext }}"
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
